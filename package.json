@@ -1,0 +1,93 @@
+{
+  "name": "ldesign-scaffold",
+  "version": "1.0.0",
+  "description": "Enterprise-level Node.js scaffold generator with Vue3 templates, Git visualization, Docker support, and more",
+  "type": "module",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "bin": {
+    "ldesign-scaffold": "dist/cli.js",
+    "lscaffold": "dist/cli.js"
+  },
+  "files": [
+    "dist",
+    "templates",
+    "README.md"
+  ],
+  "scripts": {
+    "dev": "tsup --watch",
+    "build": "tsup",
+    "test": "vitest",
+    "test:ui": "vitest --ui",
+    "test:coverage": "vitest --coverage",
+    "lint": "eslint src --ext .ts,.tsx",
+    "lint:fix": "eslint src --ext .ts,.tsx --fix",
+    "format": "prettier --write src/**/*.{ts,tsx,json,md}",
+    "docs:dev": "vitepress dev docs",
+    "docs:build": "vitepress build docs",
+    "docs:preview": "vitepress preview docs",
+    "prepublishOnly": "npm run build",
+    "check": "tsc --noEmit"
+  },
+  "dependencies": {
+    "commander": "^12.0.0",
+    "inquirer": "^10.0.0",
+    "chalk": "^5.3.0",
+    "ora": "^8.0.1",
+    "fs-extra": "^11.2.0",
+    "ejs": "^3.1.9",
+    "semver": "^7.6.0",
+    "execa": "^8.0.1",
+    "listr2": "^8.0.1",
+    "simple-git": "^3.21.0",
+    "node-fetch": "^3.3.2",
+    "tar": "^7.0.1",
+    "yaml": "^2.3.4",
+    "express": "^4.18.2",
+    "socket.io": "^4.7.5",
+    "open": "^10.0.3"
+  },
+  "devDependencies": {
+    "@eslint/js": "^9.25.0",
+    "@types/node": "^22.15.30",
+    "@types/fs-extra": "^11.0.4",
+    "@types/inquirer": "^9.0.7",
+    "@types/semver": "^7.5.6",
+    "@types/tar": "^6.1.11",
+    "@types/express": "^4.17.21",
+    "eslint": "^9.25.0",
+    "globals": "^16.0.0",
+    "typescript": "~5.8.3",
+    "typescript-eslint": "^8.30.1",
+    "tsup": "^8.0.1",
+    "vitest": "^1.2.0",
+    "@vitest/ui": "^1.2.0",
+    "@vitest/coverage-v8": "^1.2.0",
+    "vitepress": "^1.0.0",
+    "prettier": "^3.2.4",
+    "@typescript-eslint/eslint-plugin": "^6.19.0",
+    "@typescript-eslint/parser": "^6.19.0"
+  },
+  "keywords": [
+    "scaffold",
+    "generator",
+    "vue3",
+    "typescript",
+    "cli",
+    "template",
+    "git",
+    "docker",
+    "nginx",
+    "enterprise"
+  ],
+  "author": "LDesign Team",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/ldesign/ldesign-scaffold.git"
+  },
+  "bugs": {
+    "url": "https://github.com/ldesign/ldesign-scaffold/issues"
+  },
+  "homepage": "https://github.com/ldesign/ldesign-scaffold#readme"
+}

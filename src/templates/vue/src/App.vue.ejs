@@ -1,0 +1,370 @@
+<template>
+  <div id="app">
+<% if (features.includes('router')) { %>
+    <!-- 导航栏 -->
+    <nav :class="navClasses">
+      <div :class="navContainerClasses">
+        <div :class="navContentClasses">
+          <div :class="logoClasses">
+            <router-link to="/" :class="logoLinkClasses">
+              <%= projectName %>
+            </router-link>
+          </div>
+          <div :class="navLinksClasses">
+            <router-link
+              to="/"
+              :class="navLinkClasses"
+              active-class="<%= features.includes('tailwind') ? 'text-blue-600' : 'active' %>"
+            >
+              首页
+            </router-link>
+            <router-link
+              to="/about"
+              :class="navLinkClasses"
+              active-class="<%= features.includes('tailwind') ? 'text-blue-600' : 'active' %>"
+            >
+              关于
+            </router-link>
+          </div>
+        </div>
+      </div>
+    </nav>
+
+    <!-- 主要内容 -->
+    <main :class="mainClasses">
+      <router-view />
+    </main>
+
+    <!-- 页脚 -->
+    <footer :class="footerClasses">
+      <div :class="footerContainerClasses">
+        <div :class="footerContentClasses">
+          <span>Made with</span>
+          <span :class="heartClasses">❤️</span>
+          <span>by ldesign-scaffold</span>
+        </div>
+      </div>
+    </footer>
+<% } else { %>
+    <!-- 单页应用内容 -->
+    <div :class="appClasses">
+      <div :class="contentClasses">
+        <h1 :class="titleClasses">
+          <%= projectName %>
+        </h1>
+        <p :class="descriptionClasses">
+          欢迎使用 Vue 3 + <%= buildTool %> 构建的现代化应用
+        </p>
+        
+<% if (features.includes('state-management')) { %>
+        <!-- 计数器组件 -->
+        <Counter />
+<% } %>
+        
+        <div :class="linksClasses">
+          <a
+            href="https://vuejs.org"
+            target="_blank"
+            rel="noopener noreferrer"
+            :class="linkClasses"
+          >
+            Vue 文档
+          </a>
+          <a
+            href="https://github.com"
+            target="_blank"
+            rel="noopener noreferrer"
+            :class="linkClasses"
+          >
+            GitHub
+          </a>
+        </div>
+      </div>
+    </div>
+<% } %>
+  </div>
+</template>
+
+<script setup lang="ts">
+import { computed } from 'vue'
+<% if (features.includes('state-management') && !features.includes('router')) { %>
+import Counter from './components/Counter.vue'
+<% } %>
+
+// 样式类计算属性
+const navClasses = computed(() => 
+<% if (features.includes('tailwind')) { %>
+  'bg-white shadow-sm border-b'
+<% } else { %>
+  'nav'
+<% } %>
+)
+
+const navContainerClasses = computed(() => 
+<% if (features.includes('tailwind')) { %>
+  'max-w-7xl mx-auto px-4 sm:px-6 lg:px-8'
+<% } else { %>
+  'nav-container'
+<% } %>
+)
+
+const navContentClasses = computed(() => 
+<% if (features.includes('tailwind')) { %>
+  'flex justify-between h-16'
+<% } else { %>
+  'nav-content'
+<% } %>
+)
+
+const logoClasses = computed(() => 
+<% if (features.includes('tailwind')) { %>
+  'flex items-center'
+<% } else { %>
+  'logo'
+<% } %>
+)
+
+const logoLinkClasses = computed(() => 
+<% if (features.includes('tailwind')) { %>
+  'text-xl font-bold text-gray-900'
+<% } else { %>
+  'logo-link'
+<% } %>
+)
+
+const navLinksClasses = computed(() => 
+<% if (features.includes('tailwind')) { %>
+  'flex items-center space-x-8'
+<% } else { %>
+  'nav-links'
+<% } %>
+)
+
+const navLinkClasses = computed(() => 
+<% if (features.includes('tailwind')) { %>
+  'text-gray-600 hover:text-gray-900 transition-colors'
+<% } else { %>
+  'nav-link'
+<% } %>
+)
+
+const mainClasses = computed(() => 
+<% if (features.includes('tailwind')) { %>
+  'max-w-7xl mx-auto py-12 px-4 sm:px-6 lg:px-8'
+<% } else { %>
+  'main'
+<% } %>
+)
+
+const footerClasses = computed(() => 
+<% if (features.includes('tailwind')) { %>
+  'bg-white border-t mt-auto'
+<% } else { %>
+  'footer'
+<% } %>
+)
+
+const footerContainerClasses = computed(() => 
+<% if (features.includes('tailwind')) { %>
+  'max-w-7xl mx-auto py-8 px-4 sm:px-6 lg:px-8'
+<% } else { %>
+  'footer-container'
+<% } %>
+)
+
+const footerContentClasses = computed(() => 
+<% if (features.includes('tailwind')) { %>
+  'flex justify-center items-center space-x-2 text-gray-600'
+<% } else { %>
+  'footer-content'
+<% } %>
+)
+
+const heartClasses = computed(() => 
+<% if (features.includes('tailwind')) { %>
+  'text-red-500'
+<% } else { %>
+  'heart'
+<% } %>
+)
+
+const appClasses = computed(() => 
+<% if (features.includes('tailwind')) { %>
+  'min-h-screen bg-gray-50 flex flex-col items-center justify-center'
+<% } else { %>
+  'app-container'
+<% } %>
+)
+
+const contentClasses = computed(() => 
+<% if (features.includes('tailwind')) { %>
+  'text-center max-w-2xl mx-auto px-4'
+<% } else { %>
+  'content'
+<% } %>
+)
+
+const titleClasses = computed(() => 
+<% if (features.includes('tailwind')) { %>
+  'text-6xl font-bold text-gray-900 mb-4'
+<% } else { %>
+  'title'
+<% } %>
+)
+
+const descriptionClasses = computed(() => 
+<% if (features.includes('tailwind')) { %>
+  'text-xl text-gray-600 mb-8'
+<% } else { %>
+  'description'
+<% } %>
+)
+
+const linksClasses = computed(() => 
+<% if (features.includes('tailwind')) { %>
+  'flex justify-center space-x-6 mt-8'
+<% } else { %>
+  'links'
+<% } %>
+)
+
+const linkClasses = computed(() => 
+<% if (features.includes('tailwind')) { %>
+  'text-blue-600 hover:text-blue-800 transition-colors'
+<% } else { %>
+  'link'
+<% } %>
+)
+</script>
+
+<% if (!features.includes('tailwind')) { %>
+<style scoped>
+.nav {
+  background: white;
+  border-bottom: 1px solid #e5e7eb;
+  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1);
+}
+
+.nav-container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 1rem;
+}
+
+.nav-content {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  height: 4rem;
+}
+
+.logo-link {
+  font-size: 1.25rem;
+  font-weight: bold;
+  color: #111827;
+  text-decoration: none;
+}
+
+.nav-links {
+  display: flex;
+  gap: 2rem;
+}
+
+.nav-link {
+  color: #6b7280;
+  text-decoration: none;
+  transition: color 0.2s;
+}
+
+.nav-link:hover,
+.nav-link.active {
+  color: #111827;
+}
+
+.main {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 3rem 1rem;
+}
+
+.footer {
+  background: white;
+  border-top: 1px solid #e5e7eb;
+  margin-top: auto;
+}
+
+.footer-container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 2rem 1rem;
+}
+
+.footer-content {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 0.5rem;
+  color: #6b7280;
+}
+
+.heart {
+  color: #ef4444;
+}
+
+.app-container {
+  min-height: 100vh;
+  background: #f9fafb;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+.content {
+  text-align: center;
+  max-width: 32rem;
+  margin: 0 auto;
+  padding: 0 1rem;
+}
+
+.title {
+  font-size: 3.75rem;
+  font-weight: bold;
+  color: #111827;
+  margin-bottom: 1rem;
+}
+
+.description {
+  font-size: 1.25rem;
+  color: #6b7280;
+  margin-bottom: 2rem;
+}
+
+.links {
+  display: flex;
+  justify-content: center;
+  gap: 1.5rem;
+  margin-top: 2rem;
+}
+
+.link {
+  color: #2563eb;
+  text-decoration: none;
+  transition: color 0.2s;
+}
+
+.link:hover {
+  color: #1d4ed8;
+}
+
+@media (max-width: 768px) {
+  .title {
+    font-size: 2.5rem;
+  }
+  
+  .nav-links {
+    gap: 1rem;
+  }
+}
+</style>
+<% } %>

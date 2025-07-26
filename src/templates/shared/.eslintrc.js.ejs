@@ -1,0 +1,192 @@
+module.exports = {
+  root: true,
+  env: {
+    browser: true,
+    es2021: true,
+<% if (projectType === 'node') { %>
+    node: true,
+<% } %>
+<% if (features && features.includes('testing')) { %>
+    jest: true,
+<% } %>
+  },
+  extends: [
+    'eslint:recommended',
+    '@typescript-eslint/recommended',
+<% if (projectType === 'react') { %>
+    'plugin:react/recommended',
+    'plugin:react-hooks/recommended',
+    'plugin:jsx-a11y/recommended',
+<% } else if (projectType === 'vue') { %>
+    'plugin:vue/vue3-essential',
+    '@vue/typescript/recommended',
+<% } %>
+<% if (features && features.includes('prettier')) { %>
+    'prettier',
+<% } %>
+  ],
+  parser: '<% if (projectType === 'vue') { %>vue-eslint-parser<% } else { %>@typescript-eslint/parser<% } %>',
+  parserOptions: {
+    ecmaVersion: 'latest',
+    sourceType: 'module',
+<% if (projectType === 'react') { %>
+    ecmaFeatures: {
+      jsx: true,
+    },
+<% } %>
+<% if (projectType === 'vue') { %>
+    parser: '@typescript-eslint/parser',
+<% } %>
+  },
+  plugins: [
+    '@typescript-eslint',
+<% if (projectType === 'react') { %>
+    'react',
+    'react-hooks',
+    'jsx-a11y',
+<% } else if (projectType === 'vue') { %>
+    'vue',
+<% } %>
+<% if (features && features.includes('prettier')) { %>
+    'prettier',
+<% } %>
+  ],
+  rules: {
+    // TypeScript 规则
+    '@typescript-eslint/no-unused-vars': ['error', { argsIgnorePattern: '^_' }],
+    '@typescript-eslint/no-explicit-any': 'warn',
+    '@typescript-eslint/explicit-function-return-type': 'off',
+    '@typescript-eslint/explicit-module-boundary-types': 'off',
+    '@typescript-eslint/no-empty-function': 'off',
+    '@typescript-eslint/no-non-null-assertion': 'warn',
+    
+    // 通用规则
+    'no-console': process.env.NODE_ENV === 'production' ? 'warn' : 'off',
+    'no-debugger': process.env.NODE_ENV === 'production' ? 'warn' : 'off',
+    'no-unused-vars': 'off', // 使用 TypeScript 版本
+    'prefer-const': 'error',
+    'no-var': 'error',
+    'object-shorthand': 'error',
+    'prefer-template': 'error',
+    
+<% if (projectType === 'react') { %>
+    // React 规则
+    'react/react-in-jsx-scope': 'off', // React 17+ 不需要
+    'react/prop-types': 'off', // 使用 TypeScript
+    'react/jsx-uses-react': 'off',
+    'react/jsx-uses-vars': 'error',
+    'react/jsx-key': 'error',
+    'react/jsx-no-duplicate-props': 'error',
+    'react/jsx-no-undef': 'error',
+    'react/jsx-pascal-case': 'error',
+    'react/no-deprecated': 'warn',
+    'react/no-direct-mutation-state': 'error',
+    'react/no-is-mounted': 'error',
+    'react/no-unknown-property': 'error',
+    'react/require-render-return': 'error',
+    
+    // React Hooks 规则
+    'react-hooks/rules-of-hooks': 'error',
+    'react-hooks/exhaustive-deps': 'warn',
+    
+    // 可访问性规则
+    'jsx-a11y/alt-text': 'error',
+    'jsx-a11y/anchor-has-content': 'error',
+    'jsx-a11y/anchor-is-valid': 'error',
+    'jsx-a11y/click-events-have-key-events': 'warn',
+    'jsx-a11y/heading-has-content': 'error',
+    'jsx-a11y/img-redundant-alt': 'error',
+    'jsx-a11y/no-access-key': 'error',
+    
+<% } else if (projectType === 'vue') { %>
+    // Vue 规则
+    'vue/multi-word-component-names': 'off',
+    'vue/no-v-html': 'warn',
+    'vue/require-default-prop': 'off',
+    'vue/require-explicit-emits': 'error',
+    'vue/no-unused-vars': 'error',
+    'vue/no-unused-components': 'warn',
+    'vue/component-definition-name-casing': ['error', 'PascalCase'],
+    'vue/component-name-in-template-casing': ['error', 'PascalCase'],
+    'vue/custom-event-name-casing': ['error', 'camelCase'],
+    'vue/define-macros-order': 'error',
+    'vue/html-self-closing': [
+      'error',
+      {
+        html: {
+          void: 'always',
+          normal: 'always',
+          component: 'always',
+        },
+        svg: 'always',
+        math: 'always',
+      },
+    ],
+    'vue/max-attributes-per-line': [
+      'error',
+      {
+        singleline: 3,
+        multiline: 1,
+      },
+    ],
+    'vue/no-multiple-template-root': 'off', // Vue 3 允许
+    'vue/singleline-html-element-content-newline': 'off',
+    
+<% } %>
+<% if (features && features.includes('prettier')) { %>
+    // Prettier 规则
+    'prettier/prettier': 'error',
+    
+<% } %>
+  },
+  settings: {
+<% if (projectType === 'react') { %>
+    react: {
+      version: 'detect',
+    },
+<% } %>
+  },
+  overrides: [
+<% if (features && features.includes('testing')) { %>
+    {
+      files: ['**/*.test.{js,ts,tsx}', '**/*.spec.{js,ts,tsx}'],
+      env: {
+        jest: true,
+      },
+      rules: {
+        '@typescript-eslint/no-explicit-any': 'off',
+        'no-console': 'off',
+      },
+    },
+<% } %>
+<% if (projectType === 'vue') { %>
+    {
+      files: ['*.vue'],
+      rules: {
+        '@typescript-eslint/no-unused-vars': 'off',
+      },
+    },
+<% } %>
+    {
+      files: ['*.config.{js,ts}', '*.setup.{js,ts}'],
+      rules: {
+        '@typescript-eslint/no-var-requires': 'off',
+        'no-console': 'off',
+      },
+    },
+  ],
+  ignorePatterns: [
+    'dist/',
+    'build/',
+    'node_modules/',
+    'coverage/',
+<% if (projectType === 'react' || projectType === 'vue') { %>
+    'storybook-static/',
+<% } %>
+<% if (features && features.includes('docs')) { %>
+    'docs/.vitepress/cache/',
+    'docs/.vitepress/dist/',
+<% } %>
+    '*.min.js',
+  ],
+}

@@ -1,0 +1,189 @@
+<% if (features.includes('state-management')) { %>
+import { defineStore } from 'pinia'
+import { ref, computed } from 'vue'
+
+// 使用 Composition API 风格的 store
+export const useCounterStore = defineStore('counter', () => {
+  // 状态
+  const count = ref(0)
+  
+  // 计算属性
+  const doubleCount = computed(() => count.value * 2)
+  const isEven = computed(() => count.value % 2 === 0)
+  
+  // 动作
+  function increment() {
+    count.value++
+  }
+  
+  function decrement() {
+    count.value--
+  }
+  
+  function reset() {
+    count.value = 0
+  }
+  
+  function incrementBy(amount: number) {
+    count.value += amount
+  }
+  
+  function decrementBy(amount: number) {
+    count.value -= amount
+  }
+  
+  return {
+    // 状态
+    count,
+    // 计算属性
+    doubleCount,
+    isEven,
+    // 动作
+    increment,
+    decrement,
+    reset,
+    incrementBy,
+    decrementBy
+  }
+})
+
+// 示例：用户状态管理
+interface User {
+  id: string
+  name: string
+  email: string
+  avatar?: string
+}
+
+export const useUserStore = defineStore('user', () => {
+  // 状态
+  const user = ref<User | null>(null)
+  const isLoading = ref(false)
+  const error = ref<string | null>(null)
+  
+  // 计算属性
+  const isLoggedIn = computed(() => user.value !== null)
+  const userName = computed(() => user.value?.name || '游客')
+  
+  // 动作
+  async function login(email: string, password: string) {
+    isLoading.value = true
+    error.value = null
+    
+    try {
+      // 模拟 API 调用
+      await new Promise(resolve => setTimeout(resolve, 1000))
+      
+      // 模拟登录成功
+      user.value = {
+        id: '1',
+        name: '用户',
+        email,
+        avatar: 'https://via.placeholder.com/100'
+      }
+    } catch (err) {
+      error.value = '登录失败'
+      throw err
+    } finally {
+      isLoading.value = false
+    }
+  }
+  
+  function logout() {
+    user.value = null
+    error.value = null
+  }
+  
+  function updateUser(userData: Partial<User>) {
+    if (user.value) {
+      user.value = { ...user.value, ...userData }
+    }
+  }
+  
+  function clearError() {
+    error.value = null
+  }
+  
+  return {
+    // 状态
+    user,
+    isLoading,
+    error,
+    // 计算属性
+    isLoggedIn,
+    userName,
+    // 动作
+    login,
+    logout,
+    updateUser,
+    clearError
+  }
+})
+
+// 示例：应用设置状态管理
+export const useSettingsStore = defineStore('settings', () => {
+  // 状态
+  const theme = ref<'light' | 'dark'>('light')
+  const language = ref<'zh' | 'en'>('zh')
+  const notifications = ref(true)
+  
+  // 计算属性
+  const isDarkMode = computed(() => theme.value === 'dark')
+  
+  // 动作
+  function toggleTheme() {
+    theme.value = theme.value === 'light' ? 'dark' : 'light'
+  }
+  
+  function setLanguage(lang: 'zh' | 'en') {
+    language.value = lang
+  }
+  
+  function toggleNotifications() {
+    notifications.value = !notifications.value
+  }
+  
+  // 持久化设置
+  function saveSettings() {
+    const settings = {
+      theme: theme.value,
+      language: language.value,
+      notifications: notifications.value
+    }
+    localStorage.setItem('app-settings', JSON.stringify(settings))
+  }
+  
+  function loadSettings() {
+    const saved = localStorage.getItem('app-settings')
+    if (saved) {
+      try {
+        const settings = JSON.parse(saved)
+        theme.value = settings.theme || 'light'
+        language.value = settings.language || 'zh'
+        notifications.value = settings.notifications ?? true
+      } catch (error) {
+        console.error('Failed to load settings:', error)
+      }
+    }
+  }
+  
+  return {
+    // 状态
+    theme,
+    language,
+    notifications,
+    // 计算属性
+    isDarkMode,
+    // 动作
+    toggleTheme,
+    setLanguage,
+    toggleNotifications,
+    saveSettings,
+    loadSettings
+  }
+})
+<% } else { %>
+// 状态管理功能未启用
+// 如需使用状态管理，请在创建项目时选择 state-management 特性
+export {}
+<% } %>

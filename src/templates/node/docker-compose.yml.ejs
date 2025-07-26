@@ -1,0 +1,169 @@
+version: '3.8'
+
+services:
+  # 主应用服务
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: development
+    container_name: <%= projectName.toLowerCase().replace(/[^a-z0-9]/g, '-') %>-app
+    ports:
+      - "${PORT:-3000}:3000"
+    environment:
+      - NODE_ENV=${NODE_ENV:-development}
+      - PORT=3000
+      - HOST=0.0.0.0
+<% if (features.includes('database')) { %>
+      - DATABASE_URL=${DATABASE_URL:-postgresql://postgres:password@postgres:5432/<%= projectName.toLowerCase().replace(/[^a-z0-9]/g, '_') %>?schema=public}
+<% } %>
+<% if (features.includes('auth')) { %>
+      - JWT_SECRET=${JWT_SECRET:-your-super-secret-jwt-key-at-least-32-characters-long}
+<% } %>
+    volumes:
+      - .:/app
+      - /app/node_modules
+<% if (features.includes('logging')) { %>
+      - ./logs:/app/logs
+<% } %>
+      - ./uploads:/app/uploads
+    depends_on:
+<% if (features.includes('database')) { %>
+      - postgres
+<% } %>
+      - redis
+    networks:
+      - <%= projectName.toLowerCase().replace(/[^a-z0-9]/g, '-') %>-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+<% if (features.includes('database')) { %>
+  # PostgreSQL 数据库
+  postgres:
+    image: postgres:15-alpine
+    container_name: <%= projectName.toLowerCase().replace(/[^a-z0-9]/g, '-') %>-postgres
+    environment:
+      - POSTGRES_USER=${POSTGRES_USER:-postgres}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD:-password}
+      - POSTGRES_DB=${POSTGRES_DB:-<%= projectName.toLowerCase().replace(/[^a-z0-9]/g, '_') %>}
+      - POSTGRES_INITDB_ARGS=--encoding=UTF-8 --lc-collate=C --lc-ctype=C
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./docker/postgres/init:/docker-entrypoint-initdb.d
+    ports:
+      - "${POSTGRES_PORT:-5432}:5432"
+    networks:
+      - <%= projectName.toLowerCase().replace(/[^a-z0-9]/g, '-') %>-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-postgres} -d ${POSTGRES_DB:-<%= projectName.toLowerCase().replace(/[^a-z0-9]/g, '_') %>}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+<% } %>
+  # Redis 缓存
+  redis:
+    image: redis:7-alpine
+    container_name: <%= projectName.toLowerCase().replace(/[^a-z0-9]/g, '-') %>-redis
+    command: redis-server --appendonly yes --requirepass ${REDIS_PASSWORD:-}
+    volumes:
+      - redis_data:/data
+      - ./docker/redis/redis.conf:/usr/local/etc/redis/redis.conf
+    ports:
+      - "${REDIS_PORT:-6379}:6379"
+    networks:
+      - <%= projectName.toLowerCase().replace(/[^a-z0-9]/g, '-') %>-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+
+  # Nginx 反向代理（生产环境）
+  nginx:
+    image: nginx:alpine
+    container_name: <%= projectName.toLowerCase().replace(/[^a-z0-9]/g, '-') %>-nginx
+    ports:
+      - "${NGINX_PORT:-80}:80"
+      - "${NGINX_SSL_PORT:-443}:443"
+    volumes:
+      - ./docker/nginx/nginx.conf:/etc/nginx/nginx.conf
+      - ./docker/nginx/conf.d:/etc/nginx/conf.d
+      - ./docker/nginx/ssl:/etc/nginx/ssl
+      - ./uploads:/var/www/uploads
+    depends_on:
+      - app
+    networks:
+      - <%= projectName.toLowerCase().replace(/[^a-z0-9]/g, '-') %>-network
+    restart: unless-stopped
+    profiles:
+      - production
+
+  # 监控服务
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: <%= projectName.toLowerCase().replace(/[^a-z0-9]/g, '-') %>-prometheus
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+      - '--web.console.libraries=/etc/prometheus/console_libraries'
+      - '--web.console.templates=/etc/prometheus/consoles'
+      - '--storage.tsdb.retention.time=200h'
+      - '--web.enable-lifecycle'
+    volumes:
+      - ./docker/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml
+      - prometheus_data:/prometheus
+    ports:
+      - "${PROMETHEUS_PORT:-9090}:9090"
+    networks:
+      - <%= projectName.toLowerCase().replace(/[^a-z0-9]/g, '-') %>-network
+    restart: unless-stopped
+    profiles:
+      - monitoring
+
+  grafana:
+    image: grafana/grafana:latest
+    container_name: <%= projectName.toLowerCase().replace(/[^a-z0-9]/g, '-') %>-grafana
+    environment:
+      - GF_SECURITY_ADMIN_USER=${GRAFANA_USER:-admin}
+      - GF_SECURITY_ADMIN_PASSWORD=${GRAFANA_PASSWORD:-admin}
+      - GF_USERS_ALLOW_SIGN_UP=false
+    volumes:
+      - grafana_data:/var/lib/grafana
+      - ./docker/grafana/provisioning:/etc/grafana/provisioning
+      - ./docker/grafana/dashboards:/var/lib/grafana/dashboards
+    ports:
+      - "${GRAFANA_PORT:-3001}:3000"
+    networks:
+      - <%= projectName.toLowerCase().replace(/[^a-z0-9]/g, '-') %>-network
+    restart: unless-stopped
+    profiles:
+      - monitoring
+
+# 网络配置
+networks:
+  <%= projectName.toLowerCase().replace(/[^a-z0-9]/g, '-') %>-network:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.20.0.0/16
+
+# 数据卷
+volumes:
+<% if (features.includes('database')) { %>
+  postgres_data:
+    driver: local
+<% } %>
+  redis_data:
+    driver: local
+  prometheus_data:
+    driver: local
+  grafana_data:
+    driver: local

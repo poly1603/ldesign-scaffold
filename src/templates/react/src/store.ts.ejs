@@ -1,0 +1,46 @@
+<% if (features.includes('state-management')) { %>
+import { create } from 'zustand'
+
+// 定义状态接口
+interface AppState {
+  count: number
+  increment: () => void
+  decrement: () => void
+  reset: () => void
+}
+
+// 创建状态管理store
+export const useStore = create<AppState>((set) => ({
+  count: 0,
+  increment: () => set((state) => ({ count: state.count + 1 })),
+  decrement: () => set((state) => ({ count: state.count - 1 })),
+  reset: () => set({ count: 0 })
+}))
+
+// 示例：用户状态管理
+interface User {
+  id: string
+  name: string
+  email: string
+}
+
+interface UserState {
+  user: User | null
+  isLoading: boolean
+  setUser: (user: User) => void
+  clearUser: () => void
+  setLoading: (loading: boolean) => void
+}
+
+export const useUserStore = create<UserState>((set) => ({
+  user: null,
+  isLoading: false,
+  setUser: (user) => set({ user }),
+  clearUser: () => set({ user: null }),
+  setLoading: (isLoading) => set({ isLoading })
+}))
+<% } else { %>
+// 状态管理功能未启用
+// 如需使用状态管理，请在创建项目时选择 state-management 特性
+export {}
+<% } %>

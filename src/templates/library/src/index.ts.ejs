@@ -1,0 +1,177 @@
+<% if (libraryType === 'react') { %>
+// React 组件库入口文件
+export { default as Button } from './components/Button'
+export { default as Input } from './components/Input'
+export { default as Modal } from './components/Modal'
+export { default as Card } from './components/Card'
+
+// 导出类型
+export type { ButtonProps } from './components/Button'
+export type { InputProps } from './components/Input'
+export type { ModalProps } from './components/Modal'
+export type { CardProps } from './components/Card'
+
+// 导出工具函数
+export * from './utils'
+
+// 导出 hooks
+export * from './hooks'
+
+// 导出常量
+export * from './constants'
+
+// 库版本
+export const version = '0.1.0'
+
+// 库信息
+export const libraryInfo = {
+  name: '<%= projectName %>',
+  version,
+  description: '<%= description %>',
+  author: '<%= author %>'
+}
+
+<% } else if (libraryType === 'vue') { %>
+// Vue 组件库入口文件
+import type { App } from 'vue'
+
+// 导入组件
+import Button from './components/Button.vue'
+import Input from './components/Input.vue'
+import Modal from './components/Modal.vue'
+import Card from './components/Card.vue'
+
+// 组件列表
+const components = [
+  Button,
+  Input,
+  Modal,
+  Card
+]
+
+// 安装函数
+const install = (app: App) => {
+  components.forEach(component => {
+    app.component(component.name || component.__name, component)
+  })
+}
+
+// 导出单个组件
+export {
+  Button,
+  Input,
+  Modal,
+  Card
+}
+
+// 导出类型
+export type { ButtonProps } from './components/Button.vue'
+export type { InputProps } from './components/Input.vue'
+export type { ModalProps } from './components/Modal.vue'
+export type { CardProps } from './components/Card.vue'
+
+// 导出工具函数
+export * from './utils'
+
+// 导出组合式函数
+export * from './composables'
+
+// 导出常量
+export * from './constants'
+
+// 库版本
+export const version = '0.1.0'
+
+// 库信息
+export const libraryInfo = {
+  name: '<%= projectName %>',
+  version,
+  description: '<%= description %>',
+  author: '<%= author %>'
+}
+
+// 默认导出（支持 app.use() 安装）
+export default {
+  install,
+  version
+}
+
+<% } else if (libraryType === 'utils') { %>
+// 工具函数库入口文件
+
+// 字符串工具
+export * from './string'
+
+// 数组工具
+export * from './array'
+
+// 对象工具
+export * from './object'
+
+// 数字工具
+export * from './number'
+
+// 日期工具
+export * from './date'
+
+// 验证工具
+export * from './validation'
+
+// 格式化工具
+export * from './format'
+
+// 类型工具
+export * from './types'
+
+// 常量
+export * from './constants'
+
+// 库版本
+export const version = '0.1.0'
+
+// 库信息
+export const libraryInfo = {
+  name: '<%= projectName %>',
+  version,
+  description: '<%= description %>',
+  author: '<%= author %>'
+}
+
+// 默认导出所有工具函数
+export default {
+  version,
+  libraryInfo
+}
+
+<% } else { %>
+// 通用库入口文件
+
+// 导出主要功能
+export * from './core'
+
+// 导出工具函数
+export * from './utils'
+
+// 导出类型定义
+export * from './types'
+
+// 导出常量
+export * from './constants'
+
+// 库版本
+export const version = '0.1.0'
+
+// 库信息
+export const libraryInfo = {
+  name: '<%= projectName %>',
+  version,
+  description: '<%= description %>',
+  author: '<%= author %>'
+}
+
+// 默认导出
+export default {
+  version,
+  libraryInfo
+}
+<% } %>

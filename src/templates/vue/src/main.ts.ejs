@@ -1,0 +1,26 @@
+import { createApp } from 'vue'
+import App from './App.vue'
+<% if (features.includes('router')) { %>
+import router from './router'
+<% } %>
+<% if (features.includes('state-management')) { %>
+import { createPinia } from 'pinia'
+<% } %>
+<% if (features.includes('tailwind')) { %>
+import './style.css'
+<% } %>
+
+const app = createApp(App)
+
+<% if (features.includes('state-management')) { %>
+// 状态管理
+app.use(createPinia())
+<% } %>
+
+<% if (features.includes('router')) { %>
+// 路由
+app.use(router)
+<% } %>
+
+// 挂载应用
+app.mount('#app')
