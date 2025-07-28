@@ -21,7 +21,7 @@ export interface NginxServerConfig {
 export interface NginxLocationConfig {
   path: string
   type: 'static' | 'proxy' | 'redirect' | 'custom'
-  config: any
+  config: Record<string, any>
 }
 
 export class NginxManager {

@@ -1,0 +1,27 @@
+{
+  "name": "vue3-example",
+  "version": "1.0.0",
+  "description": "Vue 3 example project using ldesign-scaffold",
+  "type": "module",
+  "scripts": {
+    "dev": "node ../../dist/cli.js dev",
+    "build": "node ../../dist/cli.js build",
+    "preview": "node ../../dist/cli.js preview",
+    "lint": "node ../../dist/cli.js lint",
+    "test": "node ../../dist/cli.js test"
+  },
+  "dependencies": {
+    "vue": "^3.4.0"
+  },
+  "devDependencies": {
+    "ldesign-scaffold": "file:../..",
+    "typescript": "^5.0.0"
+  },
+  "keywords": [
+    "vue3",
+    "example",
+    "ldesign-scaffold"
+  ],
+  "author": "LDesign Team",
+  "license": "MIT"
+}

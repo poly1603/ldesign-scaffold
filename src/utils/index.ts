@@ -2,6 +2,7 @@ import fs from 'fs-extra'
 import path from 'path'
 import { execSync } from 'child_process'
 import chalk from 'chalk'
+import net from 'net'
 import { PackageManager, IDEType, DevEnvironment } from '../types/index.js'
 
 /**
@@ -42,12 +43,16 @@ export function detectPackageManager(): PackageManager {
   try {
     execSync('pnpm --version', { stdio: 'ignore' })
     return 'pnpm'
-  } catch {}
-  
+  } catch {
+    // pnpm not available
+  }
+
   try {
     execSync('yarn --version', { stdio: 'ignore' })
     return 'yarn'
-  } catch {}
+  } catch {
+    // yarn not available
+  }
   
   return 'npm'
 }
@@ -96,7 +101,9 @@ export async function detectDevEnvironment(): Promise<DevEnvironment> {
       version: npmVersion,
       path: execSync('where npm', { encoding: 'utf8' }).trim()
     }
-  } catch {}
+  } catch {
+    // npm not available
+  }
 
   try {
     const yarnVersion = execSync('yarn --version', { encoding: 'utf8' }).trim()
@@ -104,7 +111,9 @@ export async function detectDevEnvironment(): Promise<DevEnvironment> {
       version: yarnVersion,
       path: execSync('where yarn', { encoding: 'utf8' }).trim()
     }
-  } catch {}
+  } catch {
+    // yarn not available
+  }
 
   try {
     const pnpmVersion = execSync('pnpm --version', { encoding: 'utf8' }).trim()
@@ -112,7 +121,9 @@ export async function detectDevEnvironment(): Promise<DevEnvironment> {
       version: pnpmVersion,
       path: execSync('where pnpm', { encoding: 'utf8' }).trim()
     }
-  } catch {}
+  } catch {
+    // pnpm not available
+  }
 
   // 检测Git
   try {
@@ -124,18 +135,24 @@ export async function detectDevEnvironment(): Promise<DevEnvironment> {
     
     try {
       username = execSync('git config --global user.name', { encoding: 'utf8' }).trim()
-    } catch {}
-    
+    } catch {
+      // git user.name not configured
+    }
+
     try {
       email = execSync('git config --global user.email', { encoding: 'utf8' }).trim()
-    } catch {}
-    
+    } catch {
+      // git user.email not configured
+    }
+
     env.git = {
       version: gitVersion,
       path: gitPath,
       config: { username, email }
     }
-  } catch {}
+  } catch {
+    // git not available
+  }
 
   // 检测Docker
   try {
@@ -146,14 +163,18 @@ export async function detectDevEnvironment(): Promise<DevEnvironment> {
     try {
       execSync('docker info', { stdio: 'ignore' })
       running = true
-    } catch {}
-    
+    } catch {
+      // docker not running
+    }
+
     env.docker = {
       version: dockerVersion,
       path: dockerPath,
       running
     }
-  } catch {}
+  } catch {
+    // docker not available
+  }
 
   // 检测IDE
   env.ides = await detectIDEs()
@@ -204,7 +225,9 @@ export async function detectIDEs(): Promise<Array<{ type: IDEType; path: string;
         webstormFound = true
         break
       }
-    } catch {}
+    } catch {
+      // webstorm path not found
+    }
   }
   
   if (!webstormFound) {
@@ -227,7 +250,7 @@ export async function openIDE(type: IDEType, projectPath: string): Promise<boole
       case 'vscode':
         execSync(`code "${projectPath}"`, { stdio: 'ignore' })
         return true
-      case 'webstorm':
+      case 'webstorm': {
         const ides = await detectIDEs()
         const webstorm = ides.find(ide => ide.type === 'webstorm' && ide.available)
         if (webstorm) {
@@ -235,10 +258,12 @@ export async function openIDE(type: IDEType, projectPath: string): Promise<boole
           return true
         }
         return false
+      }
       default:
         return false
     }
   } catch {
+    // failed to open IDE
     return false
   }
 }
@@ -316,7 +341,7 @@ export function getRandomPort(min = 3000, max = 9999): number {
  */
 export async function isPortAvailable(port: number): Promise<boolean> {
   return new Promise((resolve) => {
-    const net = require('net')
+    // const net = require('net')
     const server = net.createServer()
     
     server.listen(port, () => {

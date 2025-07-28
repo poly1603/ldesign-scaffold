@@ -6,7 +6,7 @@ export default defineConfig({
     cli: 'src/cli.ts'
   },
   format: ['esm', 'cjs'],
-  dts: true,
+  dts: false,
   clean: true,
   splitting: false,
   sourcemap: true,
@@ -31,9 +31,7 @@ export default defineConfig({
     'socket.io',
     'open'
   ],
-  banner: {
-    js: '#!/usr/bin/env node'
-  },
+
   esbuildOptions(options) {
     options.conditions = ['node']
   }

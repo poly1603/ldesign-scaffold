@@ -1,4 +1,4 @@
-import { simpleGit, SimpleGit } from 'simple-git'
+import { simpleGit } from 'simple-git'
 import path from 'path'
 import fs from 'fs-extra'
 import { CommandResult, GitSubmodule } from '../types/index.js'
@@ -454,7 +454,7 @@ export class SubmoduleManager {
         const parts = trimmed.split(' ')
         if (parts.length >= 2) {
           const status = this.parseSubmoduleStatus(trimmed)
-          const commit = parts[0].replace(/^[\-\+U ]/, '')
+          const commit = parts[0].replace(/^[-+U ]/, '')
           const path = parts[1]
           
           statusInfo[path] = {

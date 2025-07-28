@@ -19,7 +19,7 @@ export interface WorkflowConfig {
     schedule?: Array<{
       cron: string
     }>
-    workflow_dispatch?: any
+    workflow_dispatch?: Record<string, any>
   }
   jobs: Record<string, WorkflowJob>
   env?: Record<string, string>
@@ -29,7 +29,7 @@ export interface WorkflowJob {
   name?: string
   'runs-on': string
   strategy?: {
-    matrix?: Record<string, any[]>
+    matrix?: Record<string, string[]>
     'fail-fast'?: boolean
   }
   env?: Record<string, string>

@@ -1,0 +1,27 @@
+{
+  "name": "vue2-example",
+  "version": "1.0.0",
+  "description": "Vue 2 example project using ldesign-scaffold",
+  "scripts": {
+    "dev": "node ../../dist/cli.js dev",
+    "build": "node ../../dist/cli.js build",
+    "preview": "node ../../dist/cli.js preview",
+    "lint": "node ../../dist/cli.js lint",
+    "test": "node ../../dist/cli.js test"
+  },
+  "dependencies": {
+    "vue": "^2.7.16",
+    "vue-template-compiler": "^2.7.16"
+  },
+  "devDependencies": {
+    "ldesign-scaffold": "file:../..",
+    "typescript": "^5.0.0"
+  },
+  "keywords": [
+    "vue2",
+    "example",
+    "ldesign-scaffold"
+  ],
+  "author": "LDesign Team",
+  "license": "MIT"
+}

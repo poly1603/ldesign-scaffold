@@ -179,7 +179,7 @@ export class FontManager {
   /**
    * 压缩字体文件
    */
-  async compressFonts(projectPath: string, options?: {
+  async compressFonts(projectPath: string, _options?: {
     text?: string
     formats?: ('woff' | 'woff2' | 'ttf')[]
     subset?: boolean

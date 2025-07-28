@@ -1,7 +1,7 @@
 import { simpleGit, SimpleGit, StatusResult, LogResult } from 'simple-git'
 import path from 'path'
 import fs from 'fs-extra'
-import { CommandResult, GitOperation, GitConfig } from '../types/index.js'
+import { CommandResult, GitConfig } from '../types/index.js'
 import { logger } from '../utils/index.js'
 
 export class GitManager {
@@ -297,7 +297,7 @@ export class GitManager {
   async getLog(projectPath: string, options?: { maxCount?: number; from?: string; to?: string }): Promise<CommandResult<LogResult>> {
     try {
       const git = simpleGit(projectPath)
-      const logOptions: any = {}
+      const logOptions: Record<string, any> = {}
       
       if (options?.maxCount) {
         logOptions.maxCount = options.maxCount

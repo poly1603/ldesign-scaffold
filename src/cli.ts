@@ -9,10 +9,6 @@ import { ScaffoldGenerator } from './core/ScaffoldGenerator.js'
 import { UIServer } from './ui/UIServer.js'
 import {
   ProjectConfig,
-  ProjectType,
-  BuildTool,
-  PackageManager,
-  ProjectFeature,
   TemplateVariables
 } from './types/index.js'
 import {
@@ -175,9 +171,67 @@ program
     }
   })
 
+// 开发服务器命令
+program
+  .command('dev')
+  .description('Start development server')
+  .option('-p, --port <port>', 'Server port', '3000')
+  .option('--host <host>', 'Server host', 'localhost')
+  .action(async (options) => {
+    try {
+      const { startDevServer } = await import('./commands/DevServer.js')
+      await startDevServer({
+        port: parseInt(options.port),
+        host: options.host,
+        cwd: process.cwd()
+      })
+    } catch (error) {
+      logger.error(`启动开发服务器失败: ${error instanceof Error ? error.message : String(error)}`)
+      process.exit(1)
+    }
+  })
+
+// 构建命令
+program
+  .command('build')
+  .description('Build for production')
+  .option('--outDir <dir>', 'Output directory', 'dist')
+  .action(async (options) => {
+    try {
+      const { buildProject } = await import('./commands/DevServer.js')
+      await buildProject({
+        outDir: options.outDir,
+        cwd: process.cwd()
+      })
+    } catch (error) {
+      logger.error(`构建项目失败: ${error instanceof Error ? error.message : String(error)}`)
+      process.exit(1)
+    }
+  })
+
+// 预览命令
+program
+  .command('preview')
+  .description('Preview production build')
+  .option('-p, --port <port>', 'Server port', '4173')
+  .option('--host <host>', 'Server host', 'localhost')
+  .action(async (options) => {
+    try {
+      const { previewBuild } = await import('./commands/DevServer.js')
+      await previewBuild({
+        port: parseInt(options.port),
+        host: options.host,
+        cwd: process.cwd()
+      })
+    } catch (error) {
+      logger.error(`预览构建失败: ${error instanceof Error ? error.message : String(error)}`)
+      process.exit(1)
+    }
+  })
+
 // 配置项目提示
-async function promptForConfig(projectName?: string, options: any = {}): Promise<ProjectConfig> {
-  const questions: any[] = []
+async function promptForConfig(projectName?: string, options: Record<string, any> = {}): Promise<ProjectConfig> {
+  const questions: Record<string, any>[] = []
   
   // 项目名称
   if (!projectName) {
@@ -217,7 +271,7 @@ async function promptForConfig(projectName?: string, options: any = {}): Promise
       type: 'list',
       name: 'buildTool',
       message: '选择构建工具:',
-      choices: (answers: any) => {
+      choices: (answers: Record<string, any>) => {
         const type = answers.type || options.type
         if (type === 'vue3-component') {
           return [
@@ -262,7 +316,7 @@ async function promptForConfig(projectName?: string, options: any = {}): Promise
     type: 'checkbox',
     name: 'features',
     message: '选择项目特性:',
-    choices: (answers: any) => {
+    choices: (answers: Record<string, any>) => {
       const type = answers.type || options.type
       const baseFeatures = [
         { name: 'TypeScript', value: 'typescript', checked: true },
@@ -300,7 +354,7 @@ async function promptForConfig(projectName?: string, options: any = {}): Promise
         { name: 'Fontmin', value: 'fontmin' }
       ]
       
-      let choices = [...baseFeatures, ...testFeatures]
+      const choices = [...baseFeatures, ...testFeatures]
       
       if (type?.includes('vue')) {
         choices.push(
@@ -394,24 +448,27 @@ async function promptForNextSteps(projectPath: string, config: ProjectConfig): P
   ])
   
   switch (nextAction) {
-    case 'vscode':
+    case 'vscode': {
       const vscodeSuccess = await openIDE('vscode', projectPath)
       if (!vscodeSuccess) {
         logger.warning('无法启动 VS Code，请手动打开项目')
       }
       break
-      
-    case 'webstorm':
+    }
+
+    case 'webstorm': {
       const webstormSuccess = await openIDE('webstorm', projectPath)
       if (!webstormSuccess) {
         logger.warning('无法启动 WebStorm，请手动打开项目')
       }
       break
-      
-    case 'ui':
+    }
+
+    case 'ui': {
       const uiServer = new UIServer({ port: 3000, autoOpen: true })
       await uiServer.start()
       break
+    }
       
     case 'help':
       showUsageInstructions(config)

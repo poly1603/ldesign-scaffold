@@ -14,4 +14,5 @@ export * from './types/index.js'
 export * from './utils/index.js'
 
 // 默认导出脚手架生成器
+import { ScaffoldGenerator } from './core/ScaffoldGenerator.js'
 export default ScaffoldGenerator

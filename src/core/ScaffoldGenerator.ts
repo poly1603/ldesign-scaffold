@@ -1,7 +1,7 @@
 import fs from 'fs-extra'
 import path from 'path'
 import { execa } from 'execa'
-import chalk from 'chalk'
+
 import ora from 'ora'
 import { Listr } from 'listr2'
 import {
@@ -15,7 +15,6 @@ import { TemplateManager } from './TemplateManager.js'
 import { ConfigGenerator } from './ConfigGenerator.js'
 import {
   isEmptyDir,
-  formatProjectName,
   isValidPackageName,
   getInstallCommand,
   logger,

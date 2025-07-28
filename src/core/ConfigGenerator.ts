@@ -1,7 +1,6 @@
 import fs from 'fs-extra'
 import path from 'path'
-import { ProjectConfig, ProjectFeature } from '../types/index.js'
-import { logger } from '../utils/index.js'
+import { ProjectConfig } from '../types/index.js'
 
 /**
  * 配置文件生成器

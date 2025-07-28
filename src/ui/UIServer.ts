@@ -11,12 +11,12 @@ import { SubmoduleManager } from '../commands/SubmoduleManager.js'
 import { WorkflowManager } from '../commands/WorkflowManager.js'
 import { IconManager } from '../commands/IconManager.js'
 import { FontManager } from '../commands/FontManager.js'
-import { UIConfig, ProjectConfig, CommandResult } from '../types/index.js'
+import { UIConfig, CommandResult } from '../types/index.js'
 import { logger, getAvailablePort, detectDevEnvironment } from '../utils/index.js'
 
 export class UIServer {
   private app: express.Application
-  private server: any
+  private server: ReturnType<typeof createServer>
   private io: Server
   private config: UIConfig
   private generator: ScaffoldGenerator
@@ -492,7 +492,7 @@ export class UIServer {
         try {
           await open(url)
           logger.info('已自动打开浏览器')
-        } catch (error) {
+        } catch {
           logger.warning('无法自动打开浏览器，请手动访问上述地址')
         }
       }
