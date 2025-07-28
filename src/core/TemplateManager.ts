@@ -4,8 +4,19 @@ import { fileURLToPath } from 'url'
 import { ProjectType, ProjectFeature, TemplateVariables } from '../types/index.js'
 import { logger } from '../utils/index.js'
 
-const __filename = fileURLToPath(import.meta.url)
-const __dirname = path.dirname(__filename)
+// 获取当前文件的目录路径 (兼容 CommonJS 和 ES 模块)
+let __filename: string
+let __dirname: string
+
+if (typeof import.meta !== 'undefined' && import.meta.url) {
+  // ES 模块环境
+  __filename = fileURLToPath(import.meta.url)
+  __dirname = path.dirname(__filename)
+} else {
+  // CommonJS 环境
+  __filename = __filename || ''
+  __dirname = __dirname || process.cwd()
+}
 
 /**
  * 模板管理器

@@ -2,6 +2,7 @@ import express from 'express'
 import { Server } from 'socket.io'
 import { createServer } from 'http'
 import path from 'path'
+import { fileURLToPath } from 'url'
 import open from 'open'
 import { ScaffoldGenerator } from '../core/ScaffoldGenerator.js'
 import { GitManager } from '../commands/GitManager.js'
@@ -13,6 +14,20 @@ import { IconManager } from '../commands/IconManager.js'
 import { FontManager } from '../commands/FontManager.js'
 import { UIConfig, CommandResult } from '../types/index.js'
 import { logger, getAvailablePort, detectDevEnvironment } from '../utils/index.js'
+
+// 获取当前文件的目录路径 (兼容 CommonJS 和 ES 模块)
+let __filename: string
+let __dirname: string
+
+if (typeof import.meta !== 'undefined' && import.meta.url) {
+  // ES 模块环境
+  __filename = fileURLToPath(import.meta.url)
+  __dirname = path.dirname(__filename)
+} else {
+  // CommonJS 环境
+  __filename = __filename || ''
+  __dirname = __dirname || process.cwd()
+}
 
 export class UIServer {
   private app: express.Application
@@ -60,6 +75,18 @@ export class UIServer {
   }
 
   private setupMiddleware(): void {
+    // CORS 支持
+    this.app.use((req, res, next) => {
+      res.header('Access-Control-Allow-Origin', '*')
+      res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS')
+      res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept, Authorization')
+      if (req.method === 'OPTIONS') {
+        res.sendStatus(200)
+      } else {
+        next()
+      }
+    })
+
     this.app.use(express.json())
     this.app.use(express.urlencoded({ extended: true }))
     this.app.use(express.static(path.join(__dirname, '../ui/dist')))
@@ -98,17 +125,119 @@ export class UIServer {
       }
     })
 
+    // 获取项目列表
+    this.app.get('/api/projects', async (req, res) => {
+      try {
+        // 这里应该从数据库或文件系统获取项目列表
+        // 暂时返回模拟数据
+        const projects = [
+          {
+            id: '1',
+            name: 'my-vue-app',
+            description: '我的 Vue 3 项目',
+            type: 'vue3-project',
+            author: 'Developer',
+            version: '1.0.0',
+            buildTool: 'vite',
+            packageManager: 'pnpm',
+            features: ['typescript', 'eslint', 'prettier'],
+            path: '/path/to/my-vue-app',
+            status: 'active',
+            createdAt: new Date().toISOString(),
+            updatedAt: new Date().toISOString()
+          }
+        ]
+        res.json({ success: true, data: projects })
+      } catch (error) {
+        res.status(500).json({
+          success: false,
+          error: error instanceof Error ? error.message : String(error)
+        })
+      }
+    })
+
     // 创建项目
     this.app.post('/api/projects', async (req, res) => {
       try {
-        const { config, variables, options } = req.body
+        const { targetDir, config, variables, options } = req.body
         const result = await this.generator.createProject({
-          targetDir: path.resolve(config.name),
+          targetDir: targetDir || path.resolve(config.name),
           config,
           variables,
           ...options
         })
         res.json(result)
+      } catch (error) {
+        res.status(500).json({
+          success: false,
+          error: error instanceof Error ? error.message : String(error)
+        })
+      }
+    })
+
+    // 获取单个项目信息
+    this.app.get('/api/projects/:id', async (req, res) => {
+      try {
+        const { id } = req.params
+        // 这里应该从数据库获取项目信息
+        const project = {
+          id,
+          name: 'my-vue-app',
+          description: '我的 Vue 3 项目',
+          type: 'vue3-project',
+          author: 'Developer',
+          version: '1.0.0',
+          buildTool: 'vite',
+          packageManager: 'pnpm',
+          features: ['typescript', 'eslint', 'prettier'],
+          path: '/path/to/my-vue-app',
+          status: 'active',
+          createdAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString()
+        }
+        res.json({ success: true, data: project })
+      } catch (error) {
+        res.status(500).json({
+          success: false,
+          error: error instanceof Error ? error.message : String(error)
+        })
+      }
+    })
+
+    // 验证项目名称
+    this.app.post('/api/projects/validate-name', async (req, res) => {
+      try {
+        const { name } = req.body
+        // 简单的名称验证
+        const isValid = /^[a-z0-9-_]+$/.test(name)
+        res.json({
+          success: true,
+          data: {
+            valid: isValid,
+            message: isValid ? '项目名称可用' : '项目名称只能包含小写字母、数字、连字符和下划线'
+          }
+        })
+      } catch (error) {
+        res.status(500).json({
+          success: false,
+          error: error instanceof Error ? error.message : String(error)
+        })
+      }
+    })
+
+    // 获取项目统计信息
+    this.app.get('/api/projects/statistics', async (req, res) => {
+      try {
+        const stats = {
+          total: 5,
+          todayCreated: 2,
+          typeStats: {
+            'vue3-project': 3,
+            'react-project': 1,
+            'nodejs-api': 1
+          }
+        }
+        res.json({ success: true, data: stats })
       } catch (error) {
         res.status(500).json({
           success: false,
