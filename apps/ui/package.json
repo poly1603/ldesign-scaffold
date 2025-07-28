@@ -1,0 +1,28 @@
+{
+  "name": "@ldesign/ui",
+  "version": "1.0.0",
+  "description": "LDesign 脚手架工具可视化界面",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vue-tsc && vite build",
+    "preview": "vite preview",
+    "type-check": "vue-tsc --noEmit"
+  },
+  "dependencies": {
+    "vue": "^3.4.0",
+    "vue-router": "^4.2.5",
+    "pinia": "^2.1.7",
+    "tdesign-vue-next": "^1.7.0",
+    "tdesign-icons-vue-next": "^0.2.0",
+    "axios": "^1.6.0",
+    "@ldesign/shared": "workspace:*"
+  },
+  "devDependencies": {
+    "@vitejs/plugin-vue": "^4.5.0",
+    "vite": "^5.0.0",
+    "vue-tsc": "^1.8.25",
+    "typescript": "^5.2.0",
+    "@types/node": "^20.9.0"
+  }
+}

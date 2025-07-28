@@ -1,0 +1,48 @@
+{
+  "name": "@ldesign/cli",
+  "version": "1.0.0",
+  "description": "LDesign CLI 脚手架工具",
+  "type": "module",
+  "main": "dist/index.js",
+  "bin": {
+    "ldesign": "dist/bin/ldesign.js"
+  },
+  "files": [
+    "dist",
+    "templates"
+  ],
+  "scripts": {
+    "build": "tsup",
+    "dev": "tsup --watch",
+    "clean": "rimraf dist",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest"
+  },
+  "keywords": [
+    "cli",
+    "scaffold",
+    "vue",
+    "react",
+    "typescript"
+  ],
+  "dependencies": {
+    "commander": "^11.1.0",
+    "inquirer": "^9.2.12",
+    "chalk": "^5.3.0",
+    "ora": "^7.0.1",
+    "fs-extra": "^11.2.0",
+    "execa": "^8.0.1",
+    "semver": "^7.5.4",
+    "validate-npm-package-name": "^5.0.0",
+    "typescript": "^5.0.0",
+    "open": "^9.1.0"
+  },
+  "devDependencies": {
+    "@types/fs-extra": "^11.0.4",
+    "@types/inquirer": "^9.0.7",
+    "@types/semver": "^7.5.6",
+    "@types/validate-npm-package-name": "^4.0.2",
+    "tsup": "^8.0.1",
+    "rimraf": "^5.0.5"
+  }
+}

@@ -1,6 +1,42 @@
 {
-  "files": [],
-  "references": [
-    { "path": "./tsconfig.app.json" }
+  "compilerOptions": {
+    "target": "ES2022",
+    "lib": ["ES2022", "DOM", "DOM.Iterable"],
+    "module": "ESNext",
+    "skipLibCheck": true,
+    "moduleResolution": "bundler",
+    "allowImportingTsExtensions": true,
+    "resolveJsonModule": true,
+    "isolatedModules": true,
+    "noEmit": true,
+    "jsx": "preserve",
+    "strict": true,
+    "noUnusedLocals": true,
+    "noUnusedParameters": true,
+    "noFallthroughCasesInSwitch": true,
+    "declaration": true,
+    "declarationMap": true,
+    "sourceMap": true,
+    "esModuleInterop": true,
+    "allowSyntheticDefaultImports": true,
+    "forceConsistentCasingInFileNames": true,
+    "baseUrl": ".",
+    "paths": {
+      "@ldesign/cli": ["./packages/cli/src"],
+      "@ldesign/ui": ["./apps/ui/src"],
+      "@ldesign/server": ["./apps/server/src"],
+      "@ldesign/shared": ["./packages/shared/src"],
+      "@ldesign/templates": ["./packages/templates/src"]
+    }
+  },
+  "include": [
+    "packages/**/*",
+    "apps/**/*",
+    "tools/**/*"
+  ],
+  "exclude": [
+    "node_modules",
+    "**/dist",
+    "**/build"
   ]
 }

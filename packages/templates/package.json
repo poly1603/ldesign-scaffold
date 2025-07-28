@@ -1,0 +1,28 @@
+{
+  "name": "@ldesign/templates",
+  "version": "1.0.0",
+  "description": "LDesign 脚手架工具模板包",
+  "main": "index.js",
+  "files": [
+    "vue3-basic",
+    "vue3-admin",
+    "react-basic",
+    "node-api",
+    "library"
+  ],
+  "keywords": [
+    "ldesign",
+    "scaffold",
+    "templates",
+    "vue",
+    "react",
+    "node"
+  ],
+  "author": "LDesign Team",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/ldesign/ldesign-scaffold.git",
+    "directory": "packages/templates"
+  }
+}
