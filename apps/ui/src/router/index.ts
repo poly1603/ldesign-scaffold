@@ -41,9 +41,9 @@ const routes: RouteRecordRaw[] = [
   {
     path: '/git',
     name: 'git',
-    component: () => import('../pages/GitWorkflow.vue'),
+    component: () => import('../pages/GitManage.vue'),
     meta: {
-      title: 'Git 工作流',
+      title: 'Git 管理',
     },
   },
   {

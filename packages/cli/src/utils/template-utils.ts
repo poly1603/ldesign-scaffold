@@ -10,12 +10,12 @@ export function getAvailableTemplates(): ProjectTemplate[] {
   return [
     {
       name: 'vue3-basic',
-      displayName: 'Vue 3 + Vite',
-      description: 'Vue 3 项目，使用 Vite 构建工具',
+      displayName: 'Vue 3 基础项目',
+      description: 'Vue 3 项目，使用 Vite 构建工具，支持 TypeScript + JSX + Less',
       framework: 'vue3',
       buildTool: 'vite',
       packageManager: 'pnpm',
-      features: ['typescript', 'vue-router', 'pinia', 'eslint', 'prettier'],
+      features: ['typescript', 'jsx', 'less', 'vue-router', 'pinia', 'eslint', 'prettier'],
       dependencies: {
         'vue': '^3.3.0',
         'vue-router': '^4.2.0',
@@ -23,9 +23,11 @@ export function getAvailableTemplates(): ProjectTemplate[] {
       },
       devDependencies: {
         '@vitejs/plugin-vue': '^4.4.0',
+        '@vitejs/plugin-vue-jsx': '^3.0.0',
         'vite': '^4.4.0',
         'typescript': '^5.0.0',
-        '@vue/tsconfig': '^0.4.0'
+        '@vue/tsconfig': '^0.4.0',
+        'less': '^4.1.3'
       },
       scripts: {
         'dev': 'vite',
@@ -35,61 +37,141 @@ export function getAvailableTemplates(): ProjectTemplate[] {
       templatePath: 'vue3-basic'
     },
     {
-      name: 'vue2-webpack',
-      displayName: 'Vue 2 + Webpack',
-      description: 'Vue 2 项目，使用 Webpack 构建工具',
+      name: 'vue3-component-lib',
+      displayName: 'Vue 3 组件库',
+      description: 'Vue 3 组件库开发模板，支持 TypeScript + JSX + Less，包含文档生成和多格式打包',
+      framework: 'vue3',
+      buildTool: 'vite',
+      packageManager: 'pnpm',
+      features: ['typescript', 'jsx', 'less', 'vite', 'rollup', 'vitepress', 'vitest', 'storybook'],
+      dependencies: {
+        'vue': '^3.3.0'
+      },
+      devDependencies: {
+        '@vitejs/plugin-vue': '^4.4.0',
+        '@vitejs/plugin-vue-jsx': '^3.0.0',
+        'vite': '^4.4.0',
+        'typescript': '^5.0.0',
+        'less': '^4.1.3',
+        'vitest': '^0.34.0',
+        'storybook': '^7.0.0'
+      },
+      scripts: {
+        'dev': 'storybook dev -p 6006',
+        'build': 'npm run build:lib && npm run build:types',
+        'test': 'vitest'
+      },
+      templatePath: 'vue3-component-lib'
+    },
+    {
+      name: 'vue2-basic',
+      displayName: 'Vue 2 基础项目',
+      description: 'Vue 2 项目，使用 Webpack 构建工具，支持 TypeScript + JSX + Less',
       framework: 'vue2',
       buildTool: 'webpack',
-      packageManager: 'npm',
-      features: ['typescript', 'vue-router', 'vuex', 'eslint'],
+      packageManager: 'pnpm',
+      features: ['typescript', 'jsx', 'less', 'vue-router', 'vuex', 'eslint', 'prettier'],
       dependencies: {
-        'vue': '^2.7.0',
+        'vue': '^2.7.14',
         'vue-router': '^3.6.0',
         'vuex': '^3.6.0'
       },
       devDependencies: {
+        'vue-loader': '^15.10.1',
+        'vue-template-compiler': '^2.7.14',
         'webpack': '^5.88.0',
-        'vue-loader': '^17.2.0',
-        'typescript': '^5.0.0'
+        'typescript': '^5.0.0',
+        'less': '^4.1.3'
       },
       scripts: {
         'dev': 'webpack serve',
         'build': 'webpack --mode production'
       },
-      templatePath: 'vue2-webpack'
+      templatePath: 'vue2-basic'
     },
     {
-      name: 'react-vite',
-      displayName: 'React + Vite',
-      description: 'React 项目，使用 Vite 构建工具',
+      name: 'vue2-component-lib',
+      displayName: 'Vue 2 组件库',
+      description: 'Vue 2 组件库开发模板，支持 TypeScript + JSX + Less，包含文档生成和多格式打包',
+      framework: 'vue2',
+      buildTool: 'rollup',
+      packageManager: 'pnpm',
+      features: ['typescript', 'jsx', 'less', 'rollup', 'vuepress', 'jest', 'storybook'],
+      dependencies: {
+        'vue': '^2.7.14',
+        'vue-class-component': '^7.2.6',
+        'vue-property-decorator': '^9.1.2'
+      },
+      devDependencies: {
+        'rollup': '^3.25.0',
+        'typescript': '^5.0.0',
+        'less': '^4.1.3',
+        'jest': '^29.5.0',
+        'storybook': '^7.0.0'
+      },
+      scripts: {
+        'dev': 'storybook dev -p 6006',
+        'build': 'npm run build:lib && npm run build:types',
+        'test': 'jest'
+      },
+      templatePath: 'vue2-component-lib'
+    },
+    {
+      name: 'react-basic',
+      displayName: 'React 基础项目',
+      description: 'React 项目，使用 Vite 构建工具，支持 TypeScript + JSX + Less',
       framework: 'react',
       buildTool: 'vite',
       packageManager: 'pnpm',
-      features: ['typescript', 'react-router', 'zustand', 'eslint', 'prettier'],
+      features: ['typescript', 'jsx', 'less', 'react-router', 'eslint', 'prettier'],
       dependencies: {
         'react': '^18.2.0',
         'react-dom': '^18.2.0',
-        'react-router-dom': '^6.15.0',
-        'zustand': '^4.4.0'
+        'react-router-dom': '^6.14.0'
       },
       devDependencies: {
         '@vitejs/plugin-react': '^4.0.0',
         'vite': '^4.4.0',
         'typescript': '^5.0.0',
-        '@types/react': '^18.2.0',
-        '@types/react-dom': '^18.2.0'
+        'less': '^4.1.3'
       },
       scripts: {
         'dev': 'vite',
         'build': 'tsc && vite build',
         'preview': 'vite preview'
       },
-      templatePath: 'react-vite'
+      templatePath: 'react-basic'
+    },
+    {
+      name: 'react-component-lib',
+      displayName: 'React 组件库',
+      description: 'React 组件库开发模板，支持 TypeScript + JSX + Less，包含 Storybook 和多格式打包',
+      framework: 'react',
+      buildTool: 'rollup',
+      packageManager: 'pnpm',
+      features: ['typescript', 'jsx', 'less', 'rollup', 'storybook', 'jest'],
+      dependencies: {
+        'react': '^18.2.0',
+        'react-dom': '^18.2.0'
+      },
+      devDependencies: {
+        'rollup': '^3.25.0',
+        'typescript': '^5.0.0',
+        'less': '^4.1.3',
+        'jest': '^29.5.0',
+        'storybook': '^7.0.0'
+      },
+      scripts: {
+        'dev': 'storybook dev -p 6006',
+        'build': 'npm run build:lib && npm run build:types',
+        'test': 'jest'
+      },
+      templatePath: 'react-component-lib'
     },
     {
       name: 'typescript-lib',
-      displayName: 'TypeScript Library',
-      description: 'TypeScript 工具库，使用 Rollup 打包',
+      displayName: 'TypeScript 工具库',
+      description: 'TypeScript 工具库模板，包含开发环境、测试配置、打包发布',
       framework: 'typescript',
       buildTool: 'rollup',
       packageManager: 'pnpm',
@@ -131,27 +213,58 @@ export function getAvailableTemplates(): ProjectTemplate[] {
       templatePath: 'less-lib'
     },
     {
-      name: 'nodejs-tsup',
-      displayName: 'Node.js + tsup',
-      description: 'Node.js 项目，使用 tsup 构建工具',
+      name: 'nodejs-api',
+      displayName: 'Node.js API 服务',
+      description: 'Node.js API 服务模板，包含 Express/Koa 框架、数据库集成、API 文档',
       framework: 'nodejs',
       buildTool: 'tsup',
       packageManager: 'pnpm',
-      features: ['typescript', 'tsup', 'jest', 'eslint'],
-      dependencies: {},
+      features: ['typescript', 'express', 'prisma', 'swagger', 'jest', 'eslint'],
+      dependencies: {
+        'express': '^4.18.0',
+        'cors': '^2.8.5',
+        'helmet': '^7.0.0',
+        'dotenv': '^16.3.0'
+      },
       devDependencies: {
         'typescript': '^5.0.0',
         'tsup': '^7.2.0',
         '@types/node': '^20.5.0',
+        '@types/express': '^4.17.0',
         'jest': '^29.6.0',
-        '@types/jest': '^29.5.0'
+        '@types/jest': '^29.5.0',
+        'nodemon': '^3.0.0'
       },
       scripts: {
+        'dev': 'nodemon --exec tsup --watch src',
         'build': 'tsup',
-        'dev': 'tsup --watch',
+        'start': 'node dist/index.js',
         'test': 'jest'
       },
-      templatePath: 'nodejs-tsup'
+      templatePath: 'nodejs-api'
+    },
+    {
+      name: 'less-style-lib',
+      displayName: 'Less 样式库',
+      description: 'Less 样式库模板，包含样式组件、主题系统、打包发布',
+      framework: 'less',
+      buildTool: 'rollup',
+      packageManager: 'pnpm',
+      features: ['less', 'rollup', 'autoprefixer', 'postcss'],
+      dependencies: {},
+      devDependencies: {
+        'less': '^4.2.0',
+        'rollup': '^3.29.0',
+        'rollup-plugin-postcss': '^4.0.0',
+        'autoprefixer': '^10.4.0',
+        'postcss': '^8.4.0'
+      },
+      scripts: {
+        'build': 'rollup -c',
+        'dev': 'rollup -c -w',
+        'watch': 'rollup -c -w'
+      },
+      templatePath: 'less-style-lib'
     }
   ];
 }
@@ -234,15 +347,16 @@ async function copyTemplateRecursive(
   context: TemplateContext
 ): Promise<void> {
   const fs = await import('fs-extra');
-  const files = await fs.readdir(srcDir);
-  
-  for (const file of files) {
+  // 读取所有文件，包括隐藏文件
+  const files = await fs.default.readdir(srcDir, { withFileTypes: true });
+
+  for (const dirent of files) {
+    const file = dirent.name;
     const srcPath = path.join(srcDir, file);
     const destPath = path.join(destDir, file);
-    const stats = await fs.stat(srcPath);
-    
-    if (stats.isDirectory()) {
-      await fs.ensureDir(destPath);
+
+    if (dirent.isDirectory()) {
+      await fs.default.ensureDir(destPath);
       await copyTemplateRecursive(srcPath, destPath, context);
     } else {
       // 检查是否是模板文件

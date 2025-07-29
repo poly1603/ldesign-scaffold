@@ -1,0 +1,9 @@
+{
+  "name": "test-vue-app",
+  "description": "测试Vue应用",
+  "template": "vue3-basic",
+  "path": "D:\\test",
+  "packageManager": "pnpm",
+  "initGit": true,
+  "installDeps": false
+}

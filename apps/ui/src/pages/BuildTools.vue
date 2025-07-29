@@ -183,7 +183,7 @@
         
         <t-button theme="default" @click="previewBuild">
           <template #icon>
-            <view-icon />
+            <browse-icon />
           </template>
           预览构建结果
         </t-button>
@@ -235,7 +235,7 @@ import {
   PlayCircleIcon,
   StopCircleIcon,
   FolderOpenIcon,
-  ViewIcon,
+  BrowseIcon,
   ClearIcon,
   DownloadIcon,
 } from 'tdesign-icons-vue-next';

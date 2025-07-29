@@ -425,6 +425,12 @@ router.post('/batch',
           case 'build':
             await projectService.buildProject(projectId);
             break;
+          case 'preview':
+            await projectService.previewProject(projectId);
+            break;
+          case 'test':
+            await projectService.testProject(projectId);
+            break;
           default:
             throw new Error(`Unknown action: ${action}`);
         }
@@ -457,6 +463,41 @@ router.post('/batch',
       },
       message: `Batch ${action} completed: ${successCount} succeeded, ${failureCount} failed`,
     });
+  })
+);
+
+// Git 状态
+router.get('/:id/git/status',
+  asyncHandler(async (req, res) => {
+    const { id } = req.params;
+
+    const project = projectService.getProject(id);
+    if (!project) {
+      return res.status(404).json({
+        success: false,
+        error: {
+          code: 'PROJECT_NOT_FOUND',
+          message: 'Project not found',
+        },
+      });
+    }
+
+    try {
+      const gitStatus = await projectService.getGitStatus(id);
+      res.json({
+        success: true,
+        data: gitStatus,
+      });
+    } catch (error: any) {
+      logger.error(`Failed to get git status for project ${id}:`, error);
+      res.status(500).json({
+        success: false,
+        error: {
+          code: 'GIT_STATUS_FAILED',
+          message: error.message,
+        },
+      });
+    }
   })
 );
 

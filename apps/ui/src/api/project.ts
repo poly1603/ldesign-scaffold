@@ -84,12 +84,31 @@ export const gitPullApi = (id: string): Promise<void> => {
   return api.post(`/projects/${id}/git/pull`);
 };
 
+export const gitStatusApi = (id: string): Promise<any> => {
+  return api.get(`/projects/${id}/git/status`);
+};
+
+// 预览项目
+export const previewProjectApi = (id: string): Promise<void> => {
+  return api.post(`/projects/${id}/preview`);
+};
+
+// 测试项目
+export const testProjectApi = (id: string): Promise<void> => {
+  return api.post(`/projects/${id}/test`);
+};
+
+// 批量操作项目
+export const batchProjectActionApi = (action: string, projectIds: string[]): Promise<any> => {
+  return api.post('/projects/batch', { action, projectIds });
+};
+
 // 系统相关 API
 export const getSystemInfoApi = (): Promise<any> => {
   return api.get('/system/info');
 };
 
-export const getTemplatesApi = (): Promise<any[]> => {
+export const getTemplatesApi = (): Promise<any> => {
   return api.get('/templates');
 };
 

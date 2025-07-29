@@ -52,7 +52,7 @@ export const config: ServerConfig = {
   
   server: {
     host: process.env.HOST || '127.0.0.1',
-    port: parseInt(process.env.PORT || '3001', 10),
+    port: parseInt(process.env.PORT || '3002', 10),
   },
   
   cors: {
@@ -64,7 +64,9 @@ export const config: ServerConfig = {
   paths: {
     root: process.cwd(),
     projects: process.env.PROJECTS_DIR || path.join(ldesignDir, 'projects'),
-    templates: process.env.TEMPLATES_DIR || path.join(ldesignDir, 'templates'),
+    templates: process.env.TEMPLATES_DIR || (isDevelopment
+      ? path.join(process.cwd(), '..', '..', 'packages', 'templates')
+      : path.join(ldesignDir, 'templates')),
     logs: process.env.LOGS_DIR || path.join(ldesignDir, 'logs'),
     temp: process.env.TEMP_DIR || path.join(ldesignDir, 'temp'),
   },

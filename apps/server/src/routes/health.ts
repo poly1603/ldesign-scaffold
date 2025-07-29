@@ -9,7 +9,7 @@ import { WebSocketService } from '../services/websocket';
 
 const router = Router();
 const projectService = new ProjectService();
-const wsService = new WebSocketService();
+// const wsService = new WebSocketService();
 
 // 基础健康检查
 router.get('/',
@@ -166,8 +166,8 @@ router.get('/metrics',
           delay: await measureEventLoopDelay(),
         },
         projects: {
-          total: projectService.getAllProjects().length,
-          running: projectService.getAllProjects().filter(p => p.status === 'running').length,
+          total: projectService.getProjects().length,
+          running: projectService.getProjects().filter((p: any) => p.status === 'running').length,
         },
         websocket: {
           connections: wsService.getStats().totalConnections,
@@ -321,7 +321,7 @@ async function getSystemInfo(): Promise<any> {
 
 // 获取项目统计
 async function getProjectStats(): Promise<any> {
-  const projects = projectService.getAllProjects();
+  const projects = projectService.getProjects();
   
   const stats = {
     total: projects.length,

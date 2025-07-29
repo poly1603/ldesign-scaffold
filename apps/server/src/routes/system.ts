@@ -538,4 +538,213 @@ function checkPortAvailability(port: number): Promise<boolean> {
   });
 }
 
+// 获取常用目录列表
+router.get('/common-directories',
+  asyncHandler(async (req: any, res: any) => {
+    try {
+      const platform = os.platform();
+      const homeDir = os.homedir();
+      const commonDirs = [];
+
+      // 添加用户主目录
+      commonDirs.push({
+        name: '用户主目录',
+        path: homeDir,
+        type: 'home'
+      });
+
+      // 添加桌面目录
+      const desktopPath = path.join(homeDir, 'Desktop');
+      if (await fs.pathExists(desktopPath)) {
+        commonDirs.push({
+          name: '桌面',
+          path: desktopPath,
+          type: 'desktop'
+        });
+      }
+
+      // 添加文档目录
+      const documentsPath = platform === 'win32'
+        ? path.join(homeDir, 'Documents')
+        : path.join(homeDir, 'Documents');
+      if (await fs.pathExists(documentsPath)) {
+        commonDirs.push({
+          name: '文档',
+          path: documentsPath,
+          type: 'documents'
+        });
+      }
+
+      // 添加开发目录（如果存在）
+      const devPaths = [
+        path.join(homeDir, 'dev'),
+        path.join(homeDir, 'development'),
+        path.join(homeDir, 'projects'),
+        path.join(homeDir, 'workspace'),
+        path.join(homeDir, 'code'),
+      ];
+
+      for (const devPath of devPaths) {
+        if (await fs.pathExists(devPath)) {
+          commonDirs.push({
+            name: path.basename(devPath),
+            path: devPath,
+            type: 'development'
+          });
+        }
+      }
+
+      // Windows特定目录
+      if (platform === 'win32') {
+        const programFiles = 'C:\\Program Files';
+        const programFilesX86 = 'C:\\Program Files (x86)';
+
+        if (await fs.pathExists(programFiles)) {
+          commonDirs.push({
+            name: 'Program Files',
+            path: programFiles,
+            type: 'system'
+          });
+        }
+      }
+
+      res.json({
+        success: true,
+        data: {
+          directories: commonDirs,
+          currentDirectory: process.cwd(),
+          platform
+        }
+      });
+    } catch (error: any) {
+      res.status(500).json({
+        success: false,
+        error: error.message || '获取目录列表失败'
+      });
+    }
+  })
+);
+
+// 浏览目录内容
+router.post('/browse-directory',
+  asyncHandler(async (req: any, res: any) => {
+    try {
+      const { path: dirPath } = req.body;
+
+      if (!dirPath) {
+        throw new Error('目录路径不能为空');
+      }
+
+      // 验证路径是否存在
+      if (!await fs.pathExists(dirPath)) {
+        throw new Error('目录不存在');
+      }
+
+      const stats = await fs.stat(dirPath);
+      if (!stats.isDirectory()) {
+        throw new Error('路径不是有效的目录');
+      }
+
+      // 读取目录内容
+      const items = await fs.readdir(dirPath);
+      const directories = [];
+
+      for (const item of items) {
+        const itemPath = path.join(dirPath, item);
+        try {
+          const itemStats = await fs.stat(itemPath);
+          if (itemStats.isDirectory()) {
+            directories.push({
+              name: item,
+              path: itemPath,
+              isDirectory: true,
+              size: itemStats.size,
+              modified: itemStats.mtime
+            });
+          }
+        } catch (error) {
+          // 忽略无法访问的目录
+          continue;
+        }
+      }
+
+      // 按名称排序
+      directories.sort((a, b) => a.name.localeCompare(b.name));
+
+      // 获取父目录
+      const parentPath = path.dirname(dirPath);
+      const hasParent = parentPath !== dirPath;
+
+      res.json({
+        success: true,
+        data: {
+          currentPath: dirPath,
+          parentPath: hasParent ? parentPath : null,
+          directories,
+          canWrite: await checkWritePermission(dirPath)
+        }
+      });
+    } catch (error: any) {
+      res.status(400).json({
+        success: false,
+        error: error.message || '浏览目录失败'
+      });
+    }
+  })
+);
+
+// 检查写入权限的辅助函数
+async function checkWritePermission(dirPath: string): Promise<boolean> {
+  try {
+    const testFile = path.join(dirPath, '.ldesign-write-test');
+    await fs.writeFile(testFile, 'test');
+    await fs.remove(testFile);
+    return true;
+  } catch (error) {
+    return false;
+  }
+}
+
+// 选择文件夹（返回建议的常用目录）
+router.post('/select-folder',
+  asyncHandler(async (req: any, res: any) => {
+    try {
+      // 不再打开系统对话框，而是返回建议的目录
+      const homeDir = os.homedir();
+      const platform = os.platform();
+
+      // 建议的默认目录
+      const suggestedPaths = [
+        path.join(homeDir, 'Desktop'),
+        path.join(homeDir, 'Documents'),
+        path.join(homeDir, 'dev'),
+        path.join(homeDir, 'projects'),
+        path.join(homeDir, 'workspace'),
+      ];
+
+      // 找到第一个存在且可写的目录
+      let defaultPath = homeDir;
+      for (const suggestedPath of suggestedPaths) {
+        if (await fs.pathExists(suggestedPath) && await checkWritePermission(suggestedPath)) {
+          defaultPath = suggestedPath;
+          break;
+        }
+      }
+
+      res.json({
+        success: true,
+        data: {
+          path: defaultPath,
+          message: '已选择默认目录，您可以在下方手动修改路径'
+        }
+      });
+    } catch (error: any) {
+      res.status(400).json({
+        success: false,
+        error: error.message || '选择文件夹失败'
+      });
+    }
+  })
+);
+
 export default router;

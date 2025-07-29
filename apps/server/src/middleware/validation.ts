@@ -94,7 +94,7 @@ export const commonSchemas = {
       'any.required': 'Project name is required',
     }),
     description: Joi.string().max(200).allow(''),
-    template: Joi.string().valid('vue3', 'react', 'typescript', 'less', 'nodejs').required(),
+    template: Joi.string().valid('vue3-basic', 'vue3-component-lib', 'vue2-component-lib', 'react-component-lib', 'nodejs-api').required(),
     path: Joi.string().required(),
     packageManager: Joi.string().valid('npm', 'yarn', 'pnpm').default('npm'),
     initGit: Joi.boolean().default(true),

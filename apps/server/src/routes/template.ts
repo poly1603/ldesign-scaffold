@@ -287,7 +287,7 @@ router.delete('/:name',
     const { name } = req.params;
     
     // 不允许删除内置模板
-    const builtinTemplates = ['vue3', 'react', 'typescript', 'less', 'nodejs'];
+    const builtinTemplates = ['vue3-basic', 'vue3-component-lib', 'vue2-component-lib', 'react-component-lib', 'nodejs-api'];
     if (builtinTemplates.includes(name)) {
       return res.status(403).json({
         success: false,

@@ -35,7 +35,7 @@
           
           <div v-if="selectedProject.status === 'running'" class="server-info">
             <div class="info-item">
-              <label>服务地址:</label>
+              <span class="info-label">服务地址:</span>
               <a :href="selectedProject.devUrl" target="_blank" class="dev-url">
                 {{ selectedProject.devUrl }}
               </a>
@@ -44,7 +44,7 @@
               </t-button>
             </div>
             <div class="info-item">
-              <label>端口:</label>
+              <span class="info-label">端口:</span>
               <span>{{ selectedProject.port }}</span>
             </div>
           </div>
@@ -452,7 +452,7 @@ onMounted(() => {
   font-size: 14px;
 }
 
-.info-item label {
+.info-item .info-label {
   color: var(--td-text-color-secondary);
   min-width: 60px;
 }

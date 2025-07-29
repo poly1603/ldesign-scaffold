@@ -7,20 +7,22 @@
         <!-- 步骤1: 选择模板 -->
         <div v-if="currentStep === 0" class="template-selection">
           <h4>选择项目模板</h4>
-          <t-radio-group v-model="formData.template" class="template-grid">
-            <t-radio-button
-              v-for="template in templates"
-              :key="template.value"
-              :value="template.value"
-              class="template-card"
-            >
-              <div class="template-content">
-                <component :is="template.icon" size="32" />
-                <h5>{{ template.label }}</h5>
-                <p>{{ template.description }}</p>
+          <t-loading :loading="templatesLoading" size="large">
+            <div class="template-grid">
+              <div
+                v-for="template in templates"
+                :key="template.value"
+                :class="['template-card', { 'template-card--selected': formData.template === template.value }]"
+                @click="formData.template = template.value"
+              >
+                <div class="template-content">
+                  <component :is="template.icon" size="32" />
+                  <h5>{{ template.label }}</h5>
+                  <p>{{ template.description }}</p>
+                </div>
               </div>
-            </t-radio-button>
-          </t-radio-group>
+            </div>
+          </t-loading>
         </div>
         
         <!-- 步骤2: 项目配置 -->
@@ -38,12 +40,110 @@
             <t-form-item label="项目路径" name="path">
               <t-input v-model="formData.path" placeholder="请选择项目创建路径">
                 <template #suffix>
-                  <t-button theme="default" variant="text" @click="selectPath">
+                  <t-button theme="default" variant="text" @click="showPathSelector = true">
                     <folder-open-icon />
                   </t-button>
                 </template>
               </t-input>
+              <template #help>
+                <div class="path-help">
+                  项目将创建在：{{ formData.path ? `${formData.path}/${formData.name || '[项目名称]'}` : '请先选择路径' }}
+                </div>
+              </template>
             </t-form-item>
+
+            <!-- 路径选择器对话框 -->
+            <t-dialog
+              v-model:visible="showPathSelector"
+              title="选择项目路径"
+              width="600px"
+              :footer="false"
+            >
+              <div class="path-selector">
+                <!-- 当前路径显示 -->
+                <div class="current-path">
+                  <t-input
+                    v-model="currentBrowsePath"
+                    placeholder="输入路径或从下方选择"
+                    @blur="validateAndBrowsePath"
+                  >
+                    <template #suffix>
+                      <t-button theme="default" variant="text" @click="validateAndBrowsePath">
+                        <refresh-icon />
+                      </t-button>
+                    </template>
+                  </t-input>
+                </div>
+
+                <!-- 快捷目录 -->
+                <div class="quick-directories" v-if="commonDirectories.length > 0">
+                  <h5>常用目录</h5>
+                  <div class="directory-chips">
+                    <t-tag
+                      v-for="dir in commonDirectories"
+                      :key="dir.path"
+                      theme="primary"
+                      variant="outline"
+                      clickable
+                      @click="selectDirectory(dir.path)"
+                    >
+                      {{ dir.name }}
+                    </t-tag>
+                  </div>
+                </div>
+
+                <!-- 目录浏览器 -->
+                <div class="directory-browser">
+                  <t-loading :loading="browsingDirectory">
+                    <!-- 父目录导航 -->
+                    <div v-if="currentDirectoryInfo?.parentPath" class="parent-nav">
+                      <t-button
+                        theme="default"
+                        variant="text"
+                        @click="selectDirectory(currentDirectoryInfo.parentPath)"
+                      >
+                        <chevron-left-icon />
+                        返回上级目录
+                      </t-button>
+                    </div>
+
+                    <!-- 子目录列表 -->
+                    <div class="subdirectories" v-if="currentDirectoryInfo?.directories">
+                      <div
+                        v-for="dir in currentDirectoryInfo.directories"
+                        :key="dir.path"
+                        class="directory-item"
+                        @click="selectDirectory(dir.path)"
+                      >
+                        <folder-icon />
+                        <span class="directory-name">{{ dir.name }}</span>
+                      </div>
+                    </div>
+
+                    <div v-if="currentDirectoryInfo?.directories?.length === 0" class="empty-directory">
+                      <t-empty description="此目录下没有子文件夹" />
+                    </div>
+                  </t-loading>
+                </div>
+
+                <!-- 操作按钮 -->
+                <div class="path-selector-actions">
+                  <t-space>
+                    <t-button @click="showPathSelector = false">取消</t-button>
+                    <t-button
+                      theme="primary"
+                      @click="confirmPathSelection"
+                      :disabled="!currentBrowsePath || !currentDirectoryInfo?.canWrite"
+                    >
+                      确认选择
+                    </t-button>
+                  </t-space>
+                  <div v-if="currentDirectoryInfo && !currentDirectoryInfo.canWrite" class="write-warning">
+                    <t-alert theme="warning" message="当前目录没有写入权限，请选择其他目录" />
+                  </div>
+                </div>
+              </div>
+            </t-dialog>
             
             <t-form-item label="包管理器" name="packageManager">
               <t-select v-model="formData.packageManager" placeholder="选择包管理器">
@@ -55,6 +155,10 @@
             
             <t-form-item label="Git 初始化" name="initGit">
               <t-switch v-model="formData.initGit" />
+            </t-form-item>
+
+            <t-form-item label="自动安装依赖" name="installDeps">
+              <t-switch v-model="formData.installDeps" />
             </t-form-item>
           </t-form>
         </div>
@@ -108,7 +212,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, reactive } from 'vue';
+import { ref, computed, reactive, onMounted, markRaw } from 'vue';
 import { useRouter } from 'vue-router';
 import {
   CodeIcon,
@@ -116,9 +220,14 @@ import {
   FolderOpenIcon,
   LayersIcon,
   AppIcon,
+  RefreshIcon,
+  ChevronLeftIcon,
+  FolderIcon,
 } from 'tdesign-icons-vue-next';
 import { MessagePlugin } from 'tdesign-vue-next';
 import { createProjectApi } from '../api/project';
+import { getTemplatesApi } from '../api/template';
+import { selectFolderApi, getCommonDirectoriesApi, browseDirectoryApi } from '../api/system';
 
 const router = useRouter();
 
@@ -132,54 +241,36 @@ const steps = [
 const currentStep = ref(0);
 
 // 模板配置
-const templates = [
-  {
-    value: 'vue3',
-    label: 'Vue 3 项目',
-    description: '基于 Vue 3 + Vite 的现代前端项目',
-    icon: AppIcon,
-  },
-  {
-    value: 'vue2',
-    label: 'Vue 2 项目',
-    description: '基于 Vue 2 的传统前端项目',
-    icon: AppIcon,
-  },
-  {
-    value: 'react',
-    label: 'React 项目',
-    description: '基于 React + Vite 的现代前端项目',
-    icon: LayersIcon,
-  },
-  {
-    value: 'typescript',
-    label: 'TypeScript 库',
-    description: '纯 TypeScript 工具库项目',
-    icon: CodeIcon,
-  },
-  {
-    value: 'less',
-    label: 'Less 样式库',
-    description: '基于 Less 的样式库项目',
-    icon: CodeIcon,
-  },
-  {
-    value: 'nodejs',
-    label: 'Node.js 项目',
-    description: '基于 Node.js 的后端服务项目',
-    icon: ServerIcon,
-  },
-];
+const templates = ref<any[]>([]);
+const templatesLoading = ref(false);
+
+// 图标映射
+const iconMap: Record<string, any> = {
+  'vue3-component-lib': AppIcon,
+  'vue2-component-lib': AppIcon,
+  'react-component-lib': LayersIcon,
+  'typescript-lib': CodeIcon,
+  'less-lib': CodeIcon,
+  'nodejs-api': ServerIcon,
+};
 
 // 表单数据
 const formData = reactive({
-  template: 'vue3',
+  template: '',
   name: '',
   description: '',
   path: '',
   packageManager: 'pnpm',
   initGit: true,
+  installDeps: true,
 });
+
+// 路径选择器相关数据
+const showPathSelector = ref(false);
+const currentBrowsePath = ref('');
+const browsingDirectory = ref(false);
+const commonDirectories = ref<any[]>([]);
+const currentDirectoryInfo = ref<any>(null);
 
 // 表单验证规则
 const rules = {
@@ -211,7 +302,7 @@ const canNext = computed(() => {
 });
 
 const confirmData = computed(() => {
-  const template = templates.find(t => t.value === formData.template);
+  const template = templates.value.find(t => t.value === formData.template);
   return [
     { label: '项目模板', value: template?.label },
     { label: '项目名称', value: formData.name },
@@ -219,6 +310,7 @@ const confirmData = computed(() => {
     { label: '项目路径', value: formData.path },
     { label: '包管理器', value: formData.packageManager },
     { label: 'Git 初始化', value: formData.initGit ? '是' : '否' },
+    { label: '自动安装依赖', value: formData.installDeps ? '是' : '否' },
   ];
 });
 
@@ -235,12 +327,105 @@ const prevStep = () => {
   currentStep.value--;
 };
 
-const selectPath = () => {
-  // 这里应该调用系统文件选择器
-  // 暂时使用输入框
-  const path = prompt('请输入项目路径:');
-  if (path) {
-    formData.path = path;
+// 加载模板数据
+const loadTemplates = async () => {
+  try {
+    templatesLoading.value = true;
+    console.log('开始加载模板...');
+
+    const response = await getTemplatesApi();
+    console.log('模板API响应:', response);
+
+    if (response.success && response.data && response.data.templates) {
+      templates.value = response.data.templates.map((template: any) => ({
+        value: template.name,
+        label: template.displayName,
+        description: template.description,
+        icon: markRaw(iconMap[template.name] || CodeIcon),
+      }));
+
+      console.log('处理后的模板数据:', templates.value);
+
+      // 设置默认选中第一个模板
+      if (templates.value.length > 0 && !formData.template) {
+        formData.template = templates.value[0].value;
+        console.log('设置默认模板:', formData.template);
+      }
+    } else {
+      console.error('模板数据格式错误:', response);
+      MessagePlugin.error('模板数据格式错误');
+    }
+  } catch (error: any) {
+    console.error('加载模板失败:', error);
+    MessagePlugin.error(error.response?.data?.error || '加载模板失败');
+  } finally {
+    templatesLoading.value = false;
+  }
+};
+
+// 加载常用目录
+const loadCommonDirectories = async () => {
+  try {
+    const response = await getCommonDirectoriesApi();
+    if (response.success) {
+      commonDirectories.value = response.data.directories;
+      // 设置默认浏览路径
+      if (response.data.directories.length > 0) {
+        currentBrowsePath.value = response.data.directories[0].path;
+      }
+    }
+  } catch (error: any) {
+    console.error('加载常用目录失败:', error);
+  }
+};
+
+// 浏览目录
+const browseDirectory = async (path: string) => {
+  browsingDirectory.value = true;
+  try {
+    const response = await browseDirectoryApi(path);
+    if (response.success) {
+      currentDirectoryInfo.value = response.data;
+      currentBrowsePath.value = response.data.currentPath;
+    } else {
+      MessagePlugin.error(response.error || '浏览目录失败');
+    }
+  } catch (error: any) {
+    console.error('浏览目录失败:', error);
+    MessagePlugin.error(error.response?.data?.error || '浏览目录失败');
+  } finally {
+    browsingDirectory.value = false;
+  }
+};
+
+// 选择目录
+const selectDirectory = async (path: string) => {
+  await browseDirectory(path);
+};
+
+// 验证并浏览路径
+const validateAndBrowsePath = async () => {
+  if (currentBrowsePath.value) {
+    await browseDirectory(currentBrowsePath.value);
+  }
+};
+
+// 确认路径选择
+const confirmPathSelection = () => {
+  if (currentBrowsePath.value && currentDirectoryInfo.value?.canWrite) {
+    formData.path = currentBrowsePath.value;
+    showPathSelector.value = false;
+    MessagePlugin.success('路径选择成功');
+  } else {
+    MessagePlugin.error('请选择一个有效且可写的目录');
+  }
+};
+
+// 初始化路径选择器
+const initPathSelector = async () => {
+  await loadCommonDirectories();
+  if (commonDirectories.value.length > 0) {
+    await browseDirectory(commonDirectories.value[0].path);
   }
 };
 
@@ -279,20 +464,43 @@ const createProject = async () => {
       router.push('/manage');
     }, 1000);
     
-  } catch (error) {
+  } catch (error: any) {
     console.error('创建项目失败:', error);
-    MessagePlugin.error('创建项目失败，请重试');
+
+    // 显示具体的错误信息
+    let errorMessage = '创建项目失败，请重试';
+    if (error.response?.data?.error?.message) {
+      errorMessage = error.response.data.error.message;
+    } else if (error.response?.data?.message) {
+      errorMessage = error.response.data.message;
+    } else if (error.message) {
+      errorMessage = error.message;
+    }
+
+    MessagePlugin.error(errorMessage);
     showProgress.value = false;
   } finally {
     creating.value = false;
   }
 };
+
+// 生命周期
+onMounted(() => {
+  loadTemplates();
+  initPathSelector();
+});
 </script>
 
 <style scoped>
 .create-project {
   max-width: 800px;
   margin: 0 auto;
+}
+
+.path-help {
+  font-size: 12px;
+  color: var(--td-text-color-placeholder);
+  margin-top: 4px;
 }
 
 .step-content {
@@ -302,26 +510,41 @@ const createProject = async () => {
 
 .template-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-  gap: 16px;
-  margin-top: 16px;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 20px;
+  margin-top: 20px;
 }
 
 .template-card {
   border: 1px solid var(--td-border-level-1-color);
   border-radius: 8px;
-  padding: 0;
+  background: white;
+  cursor: pointer;
   transition: all 0.2s;
+  overflow: hidden;
 }
 
 .template-card:hover {
   border-color: var(--td-brand-color);
-  box-shadow: 0 2px 8px rgba(0, 82, 217, 0.1);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  transform: translateY(-2px);
+}
+
+.template-card--selected {
+  border-color: var(--td-brand-color);
+  background: var(--td-brand-color-light);
+  box-shadow: 0 4px 12px rgba(0, 82, 217, 0.15);
 }
 
 .template-content {
   padding: 24px;
   text-align: center;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
 }
 
 .template-content h5 {
@@ -368,5 +591,80 @@ const createProject = async () => {
   font-size: 12px;
   color: var(--td-text-color-secondary);
   margin-bottom: 4px;
+}
+
+// 路径选择器样式
+.path-selector {
+  .current-path {
+    margin-bottom: 16px;
+  }
+
+  .quick-directories {
+    margin-bottom: 16px;
+
+    h5 {
+      margin: 0 0 8px 0;
+      font-size: 14px;
+      font-weight: 500;
+    }
+
+    .directory-chips {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+  }
+
+  .directory-browser {
+    border: 1px solid var(--td-border-level-1-color);
+    border-radius: 6px;
+    min-height: 200px;
+    max-height: 300px;
+    overflow-y: auto;
+    margin-bottom: 16px;
+
+    .parent-nav {
+      padding: 8px;
+      border-bottom: 1px solid var(--td-border-level-1-color);
+    }
+
+    .subdirectories {
+      padding: 8px;
+    }
+
+    .directory-item {
+      display: flex;
+      align-items: center;
+      padding: 8px;
+      border-radius: 4px;
+      cursor: pointer;
+      transition: background-color 0.2s;
+
+      &:hover {
+        background-color: var(--td-bg-color-container-hover);
+      }
+
+      .directory-name {
+        margin-left: 8px;
+        font-size: 14px;
+      }
+    }
+
+    .empty-directory {
+      padding: 32px;
+      text-align: center;
+    }
+  }
+
+  .path-selector-actions {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+
+    .write-warning {
+      flex: 1;
+      margin-left: 16px;
+    }
+  }
 }
 </style>

@@ -114,17 +114,31 @@ export function validateProjectName(name: string): { valid: boolean; errors: str
  * 获取项目根目录
  */
 export function getProjectRoot(): string {
-  // 从当前文件向上查找 package.json
+  // 从当前文件向上查找包含 packages 目录的根目录
   let currentDir = __dirname;
-  
+
   while (currentDir !== path.dirname(currentDir)) {
-    const packageJsonPath = path.join(currentDir, 'package.json');
-    if (fs.existsSync(packageJsonPath)) {
+    const packagesDir = path.join(currentDir, 'packages');
+    const templatesDir = path.join(packagesDir, 'templates');
+
+    if (fs.existsSync(templatesDir)) {
       return currentDir;
     }
     currentDir = path.dirname(currentDir);
   }
-  
+
+  // 如果找不到，尝试从 process.cwd() 开始查找
+  currentDir = process.cwd();
+  while (currentDir !== path.dirname(currentDir)) {
+    const packagesDir = path.join(currentDir, 'packages');
+    const templatesDir = path.join(packagesDir, 'templates');
+
+    if (fs.existsSync(templatesDir)) {
+      return currentDir;
+    }
+    currentDir = path.dirname(currentDir);
+  }
+
   return process.cwd();
 }
 

@@ -142,16 +142,33 @@ export class ProjectService {
     installDeps?: boolean;
   }): Promise<Project> {
     const { name, description, template, path: projectPath, packageManager, initGit = true, installDeps = true } = data;
-    
+
     // 检查项目名称是否已存在
     const existingProject = Array.from(this.projects.values()).find(p => p.name === name);
     if (existingProject) {
       throw new AppError(`Project with name '${name}' already exists`, 409);
     }
-    
-    // 检查项目路径是否已存在
-    if (await fs.pathExists(projectPath)) {
-      throw new AppError(`Directory '${projectPath}' already exists`, 409);
+
+    // 规范化路径，处理跨平台兼容性
+    const normalizedProjectPath = path.resolve(projectPath);
+    logger.info(`Original path: ${projectPath}`);
+    logger.info(`Normalized path: ${normalizedProjectPath}`);
+
+    // 检查项目路径是否已存在，如果存在则在其中创建项目子目录
+    let finalProjectPath = normalizedProjectPath;
+    if (await fs.pathExists(normalizedProjectPath)) {
+      // 如果路径已存在，检查是否是目录
+      const stats = await fs.stat(normalizedProjectPath);
+      if (stats.isDirectory()) {
+        // 在现有目录中创建项目子目录
+        finalProjectPath = path.join(normalizedProjectPath, name);
+        if (await fs.pathExists(finalProjectPath)) {
+          throw new AppError(`Directory '${finalProjectPath}' already exists`, 409);
+        }
+      } else {
+        // 如果是文件，则报错
+        throw new AppError(`File '${normalizedProjectPath}' already exists`, 409);
+      }
     }
     
     // 检查项目数量限制
@@ -163,7 +180,7 @@ export class ProjectService {
       id: uuidv4(),
       name,
       description,
-      path: projectPath,
+      path: finalProjectPath,
       template,
       packageManager,
       status: 'idle',
@@ -173,7 +190,7 @@ export class ProjectService {
     
     try {
       // 创建项目目录
-      await fs.ensureDir(projectPath);
+      await fs.ensureDir(finalProjectPath);
       
       // 从模板创建项目
       await this.createFromTemplate(project, template);
@@ -196,7 +213,7 @@ export class ProjectService {
       return project;
     } catch (error) {
       // 清理失败的项目
-      await fs.remove(projectPath).catch(() => {});
+      await fs.remove(finalProjectPath).catch(() => {});
       throw error;
     }
   }
@@ -410,9 +427,23 @@ export class ProjectService {
   // 从模板创建项目
   private async createFromTemplate(project: Project, template: string): Promise<void> {
     const templatePath = path.join(config.paths.templates, template);
-    
+
+    logger.info(`Looking for template at: ${templatePath}`);
+    logger.info(`Templates directory: ${config.paths.templates}`);
+    logger.info(`Current working directory: ${process.cwd()}`);
+
+    // 检查模板目录是否存在
+    const templatesDir = config.paths.templates;
+    const templatesDirExists = await fs.pathExists(templatesDir);
+    logger.info(`Templates directory exists: ${templatesDirExists}`);
+
+    if (templatesDirExists) {
+      const templatesList = await fs.readdir(templatesDir);
+      logger.info(`Available templates: ${templatesList.join(', ')}`);
+    }
+
     if (!(await fs.pathExists(templatePath))) {
-      throw new AppError(`Template not found: ${template}`, 404);
+      throw new AppError(`Template not found: ${template} at ${templatePath}`, 404);
     }
     
     // 复制模板文件
@@ -585,6 +616,175 @@ export class ProjectService {
     }
     
     return totalSize;
+  }
+
+  // 预览项目
+  public async previewProject(projectId: string): Promise<void> {
+    const project = this.getProject(projectId);
+    if (!project) {
+      throw new AppError('Project not found', 404);
+    }
+
+    // 检查是否已经有预览进程在运行
+    const existingProcess = this.processes.get(`${projectId}-preview`);
+    if (existingProcess) {
+      throw new AppError('Preview is already running', 400);
+    }
+
+    // 检查构建产物是否存在
+    const distPath = path.join(project.path, 'dist');
+    if (!(await fs.pathExists(distPath))) {
+      throw new AppError('Build artifacts not found. Please build the project first.', 400);
+    }
+
+    // 启动预览服务器
+    const previewProcess = spawn('npx', ['serve', 'dist', '-p', '0'], {
+      cwd: project.path,
+      stdio: 'pipe',
+    });
+
+    this.processes.set(`${projectId}-preview`, {
+      process: previewProcess,
+      type: 'preview',
+      startTime: new Date(),
+    });
+
+    // 更新项目状态
+    project.status = 'previewing';
+    project.lastActivity = new Date();
+    this.saveProjectsDebounced();
+
+    logger.info(`Preview started for project: ${project.name}`);
+  }
+
+  // 测试项目
+  public async testProject(projectId: string): Promise<void> {
+    const project = this.getProject(projectId);
+    if (!project) {
+      throw new AppError('Project not found', 404);
+    }
+
+    // 检查是否已经有测试进程在运行
+    const existingProcess = this.processes.get(`${projectId}-test`);
+    if (existingProcess) {
+      throw new AppError('Tests are already running', 400);
+    }
+
+    // 启动测试
+    const testProcess = spawn('npm', ['test'], {
+      cwd: project.path,
+      stdio: 'pipe',
+    });
+
+    this.processes.set(`${projectId}-test`, {
+      process: testProcess,
+      type: 'test',
+      startTime: new Date(),
+    });
+
+    // 更新项目状态
+    project.status = 'testing';
+    project.lastActivity = new Date();
+    this.saveProjectsDebounced();
+
+    logger.info(`Tests started for project: ${project.name}`);
+  }
+
+  // 获取 Git 状态
+  public async getGitStatus(projectId: string): Promise<any> {
+    const project = this.getProject(projectId);
+    if (!project) {
+      throw new AppError('Project not found', 404);
+    }
+
+    const gitDir = path.join(project.path, '.git');
+    if (!(await fs.pathExists(gitDir))) {
+      throw new AppError('Not a git repository', 400);
+    }
+
+    try {
+      // 获取当前分支
+      const branchResult = await this.execGitCommand(project.path, ['branch', '--show-current']);
+      const currentBranch = branchResult.trim() || 'main';
+
+      // 获取所有分支
+      const branchesResult = await this.execGitCommand(project.path, ['branch']);
+      const branches = branchesResult
+        .split('\n')
+        .filter(line => line.trim())
+        .map(line => ({
+          name: line.replace(/^\*\s*/, '').trim(),
+          current: line.startsWith('*')
+        }));
+
+      // 获取状态
+      const statusResult = await this.execGitCommand(project.path, ['status', '--porcelain']);
+      const hasChanges = statusResult.trim().length > 0;
+      const changedFiles = statusResult.split('\n').filter(line => line.trim()).length;
+
+      // 获取提交历史
+      const logResult = await this.execGitCommand(project.path, [
+        'log', '--oneline', '--max-count=10', '--pretty=format:%H|%s|%an|%ad'
+      ]);
+      const commits = logResult
+        .split('\n')
+        .filter(line => line.trim())
+        .map(line => {
+          const [hash, message, author, date] = line.split('|');
+          return {
+            hash,
+            message,
+            author,
+            date: new Date(date)
+          };
+        });
+
+      return {
+        currentBranch,
+        status: hasChanges ? 'dirty' : 'clean',
+        hasChanges,
+        hasCommits: commits.length > 0,
+        changedFiles,
+        branches,
+        commits
+      };
+    } catch (error: any) {
+      logger.error(`Failed to get git status for project ${projectId}:`, error);
+      throw new AppError(`Git status failed: ${error.message}`, 500);
+    }
+  }
+
+  // 执行 Git 命令
+  private async execGitCommand(cwd: string, args: string[]): Promise<string> {
+    return new Promise((resolve, reject) => {
+      const gitProcess = spawn('git', args, {
+        cwd,
+        stdio: 'pipe',
+      });
+
+      let stdout = '';
+      let stderr = '';
+
+      gitProcess.stdout?.on('data', (data) => {
+        stdout += data.toString();
+      });
+
+      gitProcess.stderr?.on('data', (data) => {
+        stderr += data.toString();
+      });
+
+      gitProcess.on('exit', (code) => {
+        if (code === 0) {
+          resolve(stdout);
+        } else {
+          reject(new Error(stderr || `Git command failed with exit code ${code}`));
+        }
+      });
+
+      gitProcess.on('error', (error) => {
+        reject(error);
+      });
+    });
   }
 
   // 清理资源

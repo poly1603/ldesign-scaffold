@@ -171,6 +171,30 @@
                   </template>
                   构建
                 </t-button>
+
+                <t-button
+                  theme="default"
+                  size="small"
+                  @click="previewProject(project)"
+                  :disabled="!project.buildPath || project.status === 'previewing'"
+                >
+                  <template #icon>
+                    <browse-icon />
+                  </template>
+                  预览
+                </t-button>
+
+                <t-button
+                  theme="default"
+                  size="small"
+                  @click="testProject(project)"
+                  :disabled="project.status === 'testing'"
+                >
+                  <template #icon>
+                    <play-circle-filled-icon />
+                  </template>
+                  测试
+                </t-button>
               </div>
             </template>
           </t-card>
@@ -188,15 +212,17 @@ import {
   RefreshIcon,
   FolderIcon,
   MoreIcon,
-  LabelIcon,
+  TagIcon,
   TimeIcon,
   PlayCircleIcon,
   StopCircleIcon,
   FolderOpenIcon,
   SettingIcon,
+  BrowseIcon,
+  PlayCircleFilledIcon,
 } from 'tdesign-icons-vue-next';
 import { MessagePlugin } from 'tdesign-vue-next';
-import { getProjectsApi, startProjectApi, stopProjectApi, buildProjectApi } from '../api/project';
+import { getProjectsApi, startProjectApi, stopProjectApi, buildProjectApi, previewProjectApi, testProjectApi } from '../api/project';
 import type { Project } from '../types/project';
 
 // 响应式数据
@@ -356,6 +382,31 @@ const buildProject = async (project: Project) => {
     console.error('构建项目失败:', error);
     project.status = 'error';
     MessagePlugin.error('构建项目失败');
+  }
+};
+
+const previewProject = async (project: Project) => {
+  try {
+    await previewProjectApi(project.id);
+    project.status = 'previewing';
+    project.previewUrl = `http://localhost:${project.previewPort || 3001}`;
+    MessagePlugin.success(`项目 ${project.name} 预览启动成功`);
+  } catch (error) {
+    console.error('启动预览失败:', error);
+    MessagePlugin.error('启动预览失败');
+  }
+};
+
+const testProject = async (project: Project) => {
+  try {
+    project.status = 'testing';
+    await testProjectApi(project.id);
+    project.status = 'stopped';
+    MessagePlugin.success(`项目 ${project.name} 测试完成`);
+  } catch (error) {
+    console.error('运行测试失败:', error);
+    project.status = 'error';
+    MessagePlugin.error('运行测试失败');
   }
 };
 

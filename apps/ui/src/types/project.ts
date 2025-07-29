@@ -2,7 +2,16 @@
 export type ProjectStatus = 'running' | 'stopped' | 'building' | 'error';
 
 // 项目模板类型
-export type ProjectTemplate = 'vue3' | 'vue2' | 'react' | 'typescript' | 'less' | 'nodejs';
+export type ProjectTemplate =
+  | 'vue3-basic'
+  | 'vue3-component-lib'
+  | 'vue2-basic'
+  | 'vue2-component-lib'
+  | 'react-basic'
+  | 'react-component-lib'
+  | 'typescript-lib'
+  | 'nodejs-api'
+  | 'less-style-lib';
 
 // 包管理器类型
 export type PackageManager = 'pnpm' | 'npm' | 'yarn';
